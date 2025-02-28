@@ -703,7 +703,7 @@ install_vanish_vpn() {
     colorized_echo blue "Настройка docker-compose.yml"
     docker_file_path="$APP_DIR/docker-compose.yml"
 
-    cho "----------------------------"
+    echo "----------------------------"
     colorized_echo red "Using SQLite as database"
     echo "----------------------------"
     colorized_echo blue "Fetching compose file"
