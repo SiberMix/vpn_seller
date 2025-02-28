@@ -714,13 +714,10 @@ install_vanish_vpn() {
 
     # Install requested version
     if [ "$vanish_vpn_version" == "latest" ]; then
-        yq -i '.services.vanish_vpn.image = "sibermixru/vpn_seller:latest"' "$docker_file_path"
-    else
-        yq -i ".services.vanish_vpn.image = \"sibermixru/vpn_seller:${vanish_vpn_version}\"" "$docker_file_path"
+            yq -i '.services.vanish_vpn.image = "sibermixru/vpn_queue:latest"' "$docker_file_path"
     fi
     echo "Installing $vanish_vpn_version version"
     colorized_echo green "File saved in $APP_DIR/docker-compose.yml"
-
 
 
     colorized_echo blue "Fetching .env file"

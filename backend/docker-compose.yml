@@ -1,8 +1,6 @@
 services:
   marzban:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: sibermixru/vpn_queue:latest
     restart: always
     env_file: .env
     network_mode: host
