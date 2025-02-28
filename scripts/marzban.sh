@@ -695,7 +695,7 @@ install_marzban() {
     local marzban_version=$1
     local database_type=$2
     # Получение релизов
-    FILES_URL_PREFIX="https://raw.githubusercontent.com/Gozargah/Marzban/master"
+    FILES_URL_PREFIX="https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend"
     
     mkdir -p "$DATA_DIR"
     mkdir -p "$APP_DIR"
