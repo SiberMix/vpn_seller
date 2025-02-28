@@ -5,4 +5,4 @@ services:
     env_file: .env
     network_mode: host
     volumes:
-      - /var/lib/marzban:/var/lib/marzban
+      - /var/lib/vanish_vpn:/var/lib/vanish_vpn

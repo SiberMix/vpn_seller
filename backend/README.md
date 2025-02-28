@@ -122,7 +122,7 @@ Once the installation is complete:
 - You will see the logs that you can stop watching them by closing the terminal or pressing `Ctrl+C`
 - The Marzban files will be located at `/opt/marzban`
 - The configuration file can be found at `/opt/marzban/.env` (refer to [configurations](#configuration) section to see variables)
-- The data files will be placed at `/var/lib/marzban`
+- The data files will be placed at `/var/lib/vanish_vpn`
 - For security reasons, the Marzban dashboard is not accessible via IP address. Therefore, you must [obtain SSL certificate](https://gozargah.github.io/marzban/en/examples/issue-ssl-certificate) and access your Marzban dashboard by opening a web browser and navigating to `https://YOUR_DOMAIN:8000/dashboard/` (replace YOUR_DOMAIN with your actual domain)
 - You can also use SSH port forwarding to access the Marzban dashboard locally without a domain. Replace `user@serverip` with your actual SSH username and server IP and Run the command below:
 
@@ -206,10 +206,10 @@ Eventually, launch the application using command below
 python3 main.py
 ```
 
-To launch with linux systemctl (copy marzban.service file to `/var/lib/marzban/marzban.service`)
+To launch with linux systemctl (copy marzban.service file to `/var/lib/vanish_vpn/marzban.service`)
 
 ```
-systemctl enable /var/lib/marzban/marzban.service
+systemctl enable /var/lib/vanish_vpn/marzban.service
 systemctl start marzban
 ```
 
@@ -333,7 +333,7 @@ Marzban provides a REST API that enables developers to interact with Marzban ser
 
 It's always a good idea to backup your Marzban files regularly to prevent data loss in case of system failures or accidental deletion. Here are the steps to backup Marzban:
 
-1. By default, all Marzban important files are saved in `/var/lib/marzban` (Docker versions). Copy the entire `/var/lib/marzban` directory to a backup location of your choice, such as an external hard drive or cloud storage.
+1. By default, all Marzban important files are saved in `/var/lib/vanish_vpn` (Docker versions). Copy the entire `/var/lib/vanish_vpn` directory to a backup location of your choice, such as an external hard drive or cloud storage.
 2. Additionally, make sure to backup your env file, which contains your configuration variables, and also, your Xray config file. If you installed Marzban using marzban-scripts (recommended installation approach), the env and other configurations should be inside `/opt/marzban/` directory.
 
 Marzban's backup service efficiently zips all necessary files and sends them to your specified Telegram bot. It supports SQLite, MySQL, and MariaDB databases. One of its key features is automation, allowing you to schedule backups every hour. There are no limitations concerning Telegram's upload limits for bots; if a file exceeds the limit, it will be split and sent in multiple parts. Additionally, you can initiate an immediate backup at any time.
