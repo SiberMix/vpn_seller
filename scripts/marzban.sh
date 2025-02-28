@@ -669,7 +669,7 @@ update_core_command() {
     check_running_as_root
     get_xray_core
     # Изменение ядра vanish_vpn
-    xray_executable_path="XRAY_EXECUTABLE_PATH=\"/var/lib/vanish_vpn/xray-core/xray\""
+    xray_executable_path="XRAY_EXECUTABLE_PATH=\"var/lib/marzban/xray-core/xray\""
     
     echo "Изменение ядра vanish_vpn..."
     # Проверка существования строки XRAY_EXECUTABLE_PATH в файле .env
@@ -725,8 +725,8 @@ install_vanish_vpn() {
 
     sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
     sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
-    sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/vanish_vpn/xray_config.json"~' "$APP_DIR/.env"
-    sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/vanish_vpn/db.sqlite3"~' "$APP_DIR/.env"
+    sed -i 's~\(XRAY_JSON = \).*~\1"var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
+    sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:///var/lib/marzban/db.sqlite3"~' "$APP_DIR/.env"
 
 
 
