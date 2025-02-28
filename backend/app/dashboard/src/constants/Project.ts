@@ -1,3 +1,3 @@
-export const REPO_URL = "https://github.com/Gozargah/Marzban";
-export const ORGANIZATION_URL = "https://github.com/Gozargah";
-export const DONATION_URL = "https://github.com/Gozargah/Marzban#donation";
+export const REPO_URL = "https://github.com/SiberMix/vpn_seller";
+export const ORGANIZATION_URL = "https://github.com/SiberMix";
+export const DONATION_URL = "https://www.donationalerts.com/r/vanishsecure";
