@@ -123,7 +123,7 @@ detect_compose() {
 
 install_marzban_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/Marzban-scripts-master/marzban.sh"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/marzban.sh"
     colorized_echo blue "Установка скрипта marzban"
     curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
     colorized_echo green "Скрипт marzban успешно установлен"
@@ -1449,7 +1449,7 @@ update_command() {
 
 update_marzban_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/Marzban-scripts-master/marzban.sh"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/marzban.sh"
     colorized_echo blue "Обновление скрипта marzban"
     curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
     colorized_echo green "Скрипт marzban успешно обновлен"
