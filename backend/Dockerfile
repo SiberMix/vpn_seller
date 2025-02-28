@@ -29,8 +29,8 @@ COPY --from=build /usr/local/share/xray /usr/local/share/xray
 
 COPY . /code
 
-RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
-    && chmod +x /usr/bin/marzban-cli \
-    && marzban-cli completion install --shell bash
+RUN ln -s /code/vanish-cli.py /usr/bin/vanish-cli \
+    && chmod +x /usr/bin/vanish-cli \
+    && vanish-cli completion install --shell bash
 
 CMD ["bash", "-c", "alembic upgrade head; python main.py"]

@@ -1,63 +1,63 @@
-# Marzban-scripts
-Скрипты для Marzban
+# vanish-scripts
+Скрипты для vanish
 
-## Установка Marzban
-- **Установка Marzban с SQLite**:
+## Установка vanish
+- **Установка vanish с SQLite**:
 
 ```bash
-sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish.sh)" @ install
 ```
 
-- **Установка Marzban с MySQL**:
+- **Установка vanish с MySQL**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban.sh)" @ install --database mysql
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish.sh)" @ install --database mysql
   ```
 
-- **Установка Marzban с MariaDB**:
+- **Установка vanish с MariaDB**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban.sh)" @ install --database mariadb
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish.sh)" @ install --database mariadb
   ```
   
-- **Установка Marzban с MariaDB и веткой Dev**:
+- **Установка vanish с MariaDB и веткой Dev**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban.sh)" @ install --database mariadb --dev
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish.sh)" @ install --database mariadb --dev
   ```
 
-- **Установка Marzban с MariaDB и указанной версией**:
+- **Установка vanish с MariaDB и указанной версией**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban.sh)" @ install --database mariadb --version v0.5.2
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish.sh)" @ install --database mariadb --version v0.5.2
   ```
 
 - **Обновление или изменение версии Xray-core**:
 
   ```bash
-  sudo marzban core-update
+  sudo vanish core-update
   ```
 
 
-## Установка Marzban-node
-Установите Marzban-node на вашем сервере с помощью этой команды:
+## Установка vanish-node
+Установите vanish-node на вашем сервере с помощью этой команды:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban-node.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish-node.sh)" @ install
 ```
-Установите Marzban-node на вашем сервере с пользовательским именем:
+Установите vanish-node на вашем сервере с пользовательским именем:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban-node.sh)" @ install --name marzban-node2
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish-node.sh)" @ install --name vanish-node2
 ```
-Или вы можете просто установить этот скрипт (команду marzban-node) на вашем сервере с помощью этой команды:
+Или вы можете просто установить этот скрипт (команду vanish-node) на вашем сервере с помощью этой команды:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/marzban-node.sh)" @ install-script
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/scripts/vanish-node.sh)" @ install-script
 ```
 
 Используйте `help` для просмотра всех команд:
-```marzban-node help```
+```vanish-node help```
 
 - **Обновление или изменение версии Xray-core**:
 
   ```bash
-  sudo marzban-node core-update
+  sudo vanish-node core-update
   ```

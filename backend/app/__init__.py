@@ -13,7 +13,7 @@ from config import ALLOWED_ORIGINS, DOCS, XRAY_SUBSCRIPTION_PATH
 __version__ = "0.8.4"
 
 app = FastAPI(
-    title="MarzbanAPI",
+    title="vanishAPI",
     description="Unified GUI Censorship Resistant Solution Powered by Xray",
     version=__version__,
     docs_url="/docs" if DOCS else None,

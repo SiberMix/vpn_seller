@@ -64,7 +64,7 @@ const NotificationCircle = chakra(Box, {
   },
 });
 
-const NOTIFICATION_KEY = "marzban-menu-notification";
+const NOTIFICATION_KEY = "vanish-menu-notification";
 
 export const shouldShowDonation = (): boolean => {
   const date = localStorage.getItem(NOTIFICATION_KEY);
