@@ -1,0 +1,73 @@
+# Файлы окружения
+.env
+*.env
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Логи
+*.log
+logs/
+*.out
+
+# Конфигурационные файлы IDE/редакторов
+.idea/
+.vscode/
+*.iml
+
+# Кеши и временные файлы
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Папка сборки
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Файлы virtualenv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Docker
+*.dockerfile
+docker-compose.override.yml
+
+# Базы данных
+*.sqlite3
+*.db
+
+# Python-тесты и покрытие
+.coverage
+htmlcov/
+.tox/
+.nox/
+pytest_cache/
+junitxml/
+.coverage.*
+
+# Статические файлы Django
+staticfiles/
+*.static/
+
+# Миграции Django
+*/migrations/*.py
+*/migrations/*.pyc
+
+# Медиа-файлы
+media/
+
+# Файлы и папки CI/CD
+*.pid
+celerybeat-schedule
+celerybeat.pid
+
+# Разное
+.DS_Store
+Thumbs.db
