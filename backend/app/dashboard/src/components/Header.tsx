@@ -237,15 +237,6 @@ export const Header: FC<HeaderProps> = ({ actions }) => {
               },
             }}
           >
-            <GitHubButton
-              href={REPO_URL}
-              data-color-scheme={`no-preference: ${gBtnColor}; light: ${gBtnColor}; dark: ${gBtnColor};`}
-              data-size="large"
-              data-show-count="true"
-              aria-label="Star Marzban on GitHub"
-            >
-              Star
-            </GitHubButton>
           </Box>
         </HStack>
       </Box>
