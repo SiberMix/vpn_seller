@@ -1,6 +1,8 @@
 services:
   marzban:
-    image: gozargah/marzban:latest
+    build:
+      context: .
+      dockerfile: Marzban-master/Dockerfile
     restart: always
     env_file: .env
     network_mode: host
