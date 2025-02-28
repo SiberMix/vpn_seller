@@ -702,223 +702,38 @@ install_marzban() {
     
     colorized_echo blue "Настройка docker-compose.yml"
     docker_file_path="$APP_DIR/docker-compose.yml"
-    
-    if [ "$database_type" == "mariadb" ]; then
-        # Генерация docker-compose.yml с содержимым MariaDB
-        cat > "$docker_file_path" <<EOF
-services:
-  marzban:
-    image: gozargah/marzban:${marzban_version}
-    restart: always
-    env_file: .env
-    network_mode: host
-    volumes:
-      - /var/lib/marzban:/var/lib/marzban
-      - /var/lib/marzban/logs:/var/lib/marzban-node
-    depends_on:
-      mariadb:
-        condition: service_healthy
 
-  mariadb:
-    image: mariadb:lts
-    env_file: .env
-    network_mode: host
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: \${MYSQL_DATABASE}
-      MYSQL_USER: \${MYSQL_USER}
-      MYSQL_PASSWORD: \${MYSQL_PASSWORD}
-    command:
-      - --bind-address=127.0.0.1                  # Ограничивает доступ только локальным хостом для повышения безопасности
-      - --character_set_server=utf8mb4            # Устанавливает кодировку UTF-8 для полной поддержки Unicode
-      - --collation_server=utf8mb4_unicode_ci     # Определяет сопоставление для Unicode
-      - --host-cache-size=0                       # Отключает кэш хоста для предотвращения проблем с DNS
-      - --innodb-open-files=1024                  # Устанавливает лимит открытых файлов для InnoDB
-      - --innodb-buffer-pool-size=256M            # Выделяет размер буферного пула для InnoDB
-      - --binlog_expire_logs_seconds=1209600      # Устанавливает срок хранения бинарных логов в 14 дней (2 недели)
-      - --innodb-log-file-size=64M                # Устанавливает размер файла журнала InnoDB для баланса между хранением и производительностью
-      - --innodb-log-files-in-group=2             # Использует два файла журнала для баланса восстановления и дисковых операций
-      - --innodb-doublewrite=0                    # Отключает двойную запись (уменьшает операции ввода/вывода; может увеличить риск потери данных)
-      - --general_log=0                           # Отключает общий журнал запросов для уменьшения использования диска
-      - --slow_query_log=1                        # Включает журнал медленных запросов для выявления проблем производительности
-      - --slow_query_log_file=/var/lib/mysql/slow.log # Записывает медленные запросы для устранения неполадок
-      - --long_query_time=2                       # Определяет порог медленного запроса в 2 секунды
-    volumes:
-      - /var/lib/marzban/mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
-      start_interval: 3s
-      interval: 10s
-      timeout: 5s
-      retries: 3
-EOF
-        echo "----------------------------"
-        colorized_echo red "Using MariaDB as database"
-        echo "----------------------------"
-        colorized_echo green "File generated at $APP_DIR/docker-compose.yml"
+    cho "----------------------------"
+    colorized_echo red "Using SQLite as database"
+    echo "----------------------------"
+    colorized_echo blue "Fetching compose file"
+    curl -sL "$FILES_URL_PREFIX/docker-compose.yml" -o "$docker_file_path"
 
-        # Modify .env file
-        colorized_echo blue "Fetching .env file"
-        curl -sL "$FILES_URL_PREFIX/.env.example" -o "$APP_DIR/.env"
-
-        # Comment out the SQLite line
-        sed -i 's~^\(SQLALCHEMY_DATABASE_URL = "sqlite:////var/lib/marzban/db.sqlite3"\)~#\1~' "$APP_DIR/.env"
-
-
-        # Add the MySQL connection string
-        #echo -e '\nSQLALCHEMY_DATABASE_URL = "mysql+pymysql://marzban:password@127.0.0.1:3306/marzban"' >> "$APP_DIR/.env"
-
-        sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
-        sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
-
-
-        prompt_for_marzban_password
-        MYSQL_ROOT_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)
-        
-        echo "" >> "$ENV_FILE"
-        echo "" >> "$ENV_FILE"
-        echo "# Database configuration" >> "$ENV_FILE"
-        echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> "$ENV_FILE"
-        echo "MYSQL_DATABASE=marzban" >> "$ENV_FILE"
-        echo "MYSQL_USER=marzban" >> "$ENV_FILE"
-        echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> "$ENV_FILE"
-        
-        SQLALCHEMY_DATABASE_URL="mysql+pymysql://marzban:${MYSQL_PASSWORD}@127.0.0.1:3306/marzban"
-        
-        echo "" >> "$ENV_FILE"
-        echo "# SQLAlchemy Database URL" >> "$ENV_FILE"
-        echo "SQLALCHEMY_DATABASE_URL=\"$SQLALCHEMY_DATABASE_URL\"" >> "$ENV_FILE"
-        
-        colorized_echo green "File saved in $APP_DIR/.env"
-
-    elif [ "$database_type" == "mysql" ]; then
-        # Generate docker-compose.yml with MySQL content
-        cat > "$docker_file_path" <<EOF
-services:
-  marzban:
-    image: gozargah/marzban:${marzban_version}
-    restart: always
-    env_file: .env
-    network_mode: host
-    volumes:
-      - /var/lib/marzban:/var/lib/marzban
-      - /var/lib/marzban/logs:/var/lib/marzban-node
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-  mysql:
-    image: mysql:lts
-    env_file: .env
-    network_mode: host
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: \${MYSQL_DATABASE}
-      MYSQL_USER: \${MYSQL_USER}
-      MYSQL_PASSWORD: \${MYSQL_PASSWORD}
-    command:
-      - --mysqlx=OFF                             # Disables MySQL X Plugin to save resources if X Protocol isn't used
-      - --bind-address=127.0.0.1                  # Restricts access to localhost for increased security
-      - --character_set_server=utf8mb4            # Sets UTF-8 character set for full Unicode support
-      - --collation_server=utf8mb4_unicode_ci     # Defines collation for Unicode
-      - --log-bin=mysql-bin                       # Enables binary logging for point-in-time recovery
-      - --binlog_expire_logs_seconds=1209600      # Sets binary log expiration to 14 days
-      - --host-cache-size=0                       # Disables host cache to prevent DNS issues
-      - --innodb-open-files=1024                  # Sets the limit for InnoDB open files
-      - --innodb-buffer-pool-size=256M            # Allocates buffer pool size for InnoDB
-      - --innodb-log-file-size=64M                # Sets InnoDB log file size to balance log retention and performance
-      - --innodb-log-files-in-group=2             # Uses two log files to balance recovery and disk I/O
-      - --general_log=0                           # Disables general query log for lower disk usage
-      - --slow_query_log=1                        # Enables slow query log for performance analysis
-      - --slow_query_log_file=/var/lib/mysql/slow.log # Logs slow queries for troubleshooting
-      - --long_query_time=2                       # Defines slow query threshold as 2 seconds
-    volumes:
-      - /var/lib/marzban/mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "marzban", "--password=\${MYSQL_PASSWORD}"]
-      start_period: 5s
-      interval: 5s
-      timeout: 5s
-      retries: 55
-      
-EOF
-        echo "----------------------------"
-        colorized_echo red "Using MySQL as database"
-        echo "----------------------------"
-        colorized_echo green "File generated at $APP_DIR/docker-compose.yml"
-
-        # Modify .env file
-        colorized_echo blue "Fetching .env file"
-        curl -sL "$FILES_URL_PREFIX/.env.example" -o "$APP_DIR/.env"
-
-        # Comment out the SQLite line
-        sed -i 's~^\(SQLALCHEMY_DATABASE_URL = "sqlite:////var/lib/marzban/db.sqlite3"\)~#\1~' "$APP_DIR/.env"
-
-
-        # Add the MySQL connection string
-        #echo -e '\nSQLALCHEMY_DATABASE_URL = "mysql+pymysql://marzban:password@127.0.0.1:3306/marzban"' >> "$APP_DIR/.env"
-
-        sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
-        sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
-
-
-        prompt_for_marzban_password
-        MYSQL_ROOT_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)
-        
-        echo "" >> "$ENV_FILE"
-        echo "" >> "$ENV_FILE"
-        echo "# Database configuration" >> "$ENV_FILE"
-        echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> "$ENV_FILE"
-        echo "MYSQL_DATABASE=marzban" >> "$ENV_FILE"
-        echo "MYSQL_USER=marzban" >> "$ENV_FILE"
-        echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> "$ENV_FILE"
-        
-        SQLALCHEMY_DATABASE_URL="mysql+pymysql://marzban:${MYSQL_PASSWORD}@127.0.0.1:3306/marzban"
-        
-        echo "" >> "$ENV_FILE"
-        echo "# SQLAlchemy Database URL" >> "$ENV_FILE"
-        echo "SQLALCHEMY_DATABASE_URL=\"$SQLALCHEMY_DATABASE_URL\"" >> "$ENV_FILE"
-        
-        colorized_echo green "File saved in $APP_DIR/.env"
-
-    else
-        echo "----------------------------"
-        colorized_echo red "Using SQLite as database"
-        echo "----------------------------"
-        colorized_echo blue "Fetching compose file"
-        curl -sL "$FILES_URL_PREFIX/docker-compose.yml" -o "$docker_file_path"
-
-        # Install requested version
-        if [ "$marzban_version" == "latest" ]; then
+    # Install requested version
+    if [ "$marzban_version" == "latest" ]; then
             yq -i '.services.marzban.image = "gozargah/marzban:latest"' "$docker_file_path"
-        else
+    else
             yq -i ".services.marzban.image = \"gozargah/marzban:${marzban_version}\"" "$docker_file_path"
-        fi
-        echo "Installing $marzban_version version"
-        colorized_echo green "File saved in $APP_DIR/docker-compose.yml"
+    fi
+    echo "Installing $marzban_version version"
+    colorized_echo green "File saved in $APP_DIR/docker-compose.yml"
 
 
-        colorized_echo blue "Fetching .env file"
-        curl -sL "$FILES_URL_PREFIX/.env.example" -o "$APP_DIR/.env"
+    colorized_echo blue "Fetching .env file"
+    curl -sL "$FILES_URL_PREFIX/.env.example" -o "$APP_DIR/.env"
 
-        sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
-        sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
-        sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
-        sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/marzban/db.sqlite3"~' "$APP_DIR/.env"
+    sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
+    sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
+    sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
+    sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/marzban/db.sqlite3"~' "$APP_DIR/.env"
 
 
 
 
 
         
-        colorized_echo green "File saved in $APP_DIR/.env"
-    fi
-    
+    colorized_echo green "File saved in $APP_DIR/.env"
+
     colorized_echo blue "Fetching xray config file"
     curl -sL "$FILES_URL_PREFIX/xray_config.json" -o "$DATA_DIR/xray_config.json"
     colorized_echo green "File saved in $DATA_DIR/xray_config.json"
