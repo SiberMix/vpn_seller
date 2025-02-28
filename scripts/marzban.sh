@@ -3,7 +3,7 @@ set -e
 
 INSTALL_DIR="/opt"
 if [ -z "$APP_NAME" ]; then
-    APP_NAME="marzban"
+    APP_NAME="vanish_vpn"
 fi
 APP_DIR="$INSTALL_DIR/$APP_NAME"
 DATA_DIR="/var/lib/$APP_NAME"
@@ -121,15 +121,15 @@ detect_compose() {
     fi
 }
 
-install_marzban_script() {
+install_vanish_vpn_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/marzban.sh"
-    colorized_echo blue "Установка скрипта marzban"
-    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
-    colorized_echo green "Скрипт marzban успешно установлен"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish_vpn.sh"
+    colorized_echo blue "Установка скрипта vanish_vpn"
+    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish_vpn
+    colorized_echo green "Скрипт vanish_vpn успешно установлен"
 }
 
-is_marzban_installed() {
+is_vanish_vpn_installed() {
     if [ -d $APP_DIR ]; then
         return 0
     else
@@ -230,7 +230,7 @@ send_backup_to_telegram() {
     fi
 
     local backup_size=$(du -m "$backup_path" | cut -f1)
-    local split_dir="/tmp/marzban_backup_split"
+    local split_dir="/tmp/vanish_vpn_backup_split"
     local is_single_file=true
 
     mkdir -p "$split_dir"
@@ -439,7 +439,7 @@ add_cron_job() {
 
     crontab -l 2>/dev/null > "$temp_cron" || true
     grep -v "$command" "$temp_cron" > "${temp_cron}.tmp" && mv "${temp_cron}.tmp" "$temp_cron"
-    echo "$schedule $command # marzban-backup-service" >> "$temp_cron"
+    echo "$schedule $command # vanish_vpn-backup-service" >> "$temp_cron"
     
     if crontab "$temp_cron"; then
         colorized_echo green "Задача Cron успешно добавлена."
@@ -461,7 +461,7 @@ remove_backup_service() {
     local temp_cron=$(mktemp)
     crontab -l 2>/dev/null > "$temp_cron"
 
-    sed -i '/# marzban-backup-service/d' "$temp_cron"
+    sed -i '/# vanish_vpn-backup-service/d' "$temp_cron"
 
     if crontab "$temp_cron"; then
         colorized_echo green "Задача сервиса резервного копирования удалена из crontab."
@@ -476,11 +476,11 @@ remove_backup_service() {
 
 backup_command() {
     local backup_dir="$APP_DIR/backup"
-    local temp_dir="/tmp/marzban_backup"
+    local temp_dir="/tmp/vanish_vpn_backup"
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local backup_file="$backup_dir/backup_$timestamp.tar.gz"
     local error_messages=()
-    local log_file="/var/log/marzban_backup_error.log"
+    local log_file="/var/log/vanish_vpn_backup_error.log"
     > "$log_file"
     echo "Лог резервного копирования - $(date)" > "$log_file"
 
@@ -558,7 +558,7 @@ backup_command() {
 
     cp "$APP_DIR/.env" "$temp_dir/" 2>>"$log_file"
     cp "$APP_DIR/docker-compose.yml" "$temp_dir/" 2>>"$log_file"
-    rsync -av --exclude 'xray-core' --exclude 'mysql' "$DATA_DIR/" "$temp_dir/marzban_data/" >>"$log_file" 2>&1
+    rsync -av --exclude 'xray-core' --exclude 'mysql' "$DATA_DIR/" "$temp_dir/vanish_vpn_data/" >>"$log_file" 2>&1
 
     if ! tar -czf "$backup_file" -C "$temp_dir" .; then
         error_messages+=("Не удалось создать архив резервной копии.")
@@ -664,14 +664,14 @@ get_xray_core() {
     rm "${xray_filename}"
 }
 
-# Функция обновления основного ядра Marzban
+# Функция обновления основного ядра vanish_vpn
 update_core_command() {
     check_running_as_root
     get_xray_core
-    # Изменение ядра Marzban
-    xray_executable_path="XRAY_EXECUTABLE_PATH=\"/var/lib/marzban/xray-core/xray\""
+    # Изменение ядра vanish_vpn
+    xray_executable_path="XRAY_EXECUTABLE_PATH=\"/var/lib/vanish_vpn/xray-core/xray\""
     
-    echo "Изменение ядра Marzban..."
+    echo "Изменение ядра vanish_vpn..."
     # Проверка существования строки XRAY_EXECUTABLE_PATH в файле .env
     if ! grep -q "^XRAY_EXECUTABLE_PATH=" "$ENV_FILE"; then
         # Если строка не существует, добавляем её
@@ -681,18 +681,18 @@ update_core_command() {
         sed -i "s~^XRAY_EXECUTABLE_PATH=.*~${xray_executable_path}~" "$ENV_FILE"
     fi
     
-    # Перезапуск Marzban
-    colorized_echo red "Перезапуск Marzban..."
+    # Перезапуск vanish_vpn
+    colorized_echo red "Перезапуск vanish_vpn..."
     if restart_command -n >/dev/null 2>&1; then
-        colorized_echo green "Marzban успешно перезапущен!"
+        colorized_echo green "vanish_vpn успешно перезапущен!"
     else
-        colorized_echo red "Ошибка перезапуска Marzban!"
+        colorized_echo red "Ошибка перезапуска vanish_vpn!"
     fi
     colorized_echo blue "Установка версии Xray-core $selected_version завершена."
 }
 
-install_marzban() {
-    local marzban_version=$1
+install_vanish_vpn() {
+    local vanish_vpn_version=$1
     local database_type=$2
     # Получение релизов
     FILES_URL_PREFIX="https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend"
@@ -710,12 +710,12 @@ install_marzban() {
     curl -sL "$FILES_URL_PREFIX/docker-compose.yml" -o "$docker_file_path"
 
     # Install requested version
-    if [ "$marzban_version" == "latest" ]; then
-            yq -i '.services.marzban.image = "gozargah/marzban:latest"' "$docker_file_path"
+    if [ "$vanish_vpn_version" == "latest" ]; then
+            yq -i '.services.vanish_vpn.image = "gozargah/vanish_vpn:latest"' "$docker_file_path"
     else
-            yq -i ".services.marzban.image = \"gozargah/marzban:${marzban_version}\"" "$docker_file_path"
+            yq -i ".services.vanish_vpn.image = \"gozargah/vanish_vpn:${vanish_vpn_version}\"" "$docker_file_path"
     fi
-    echo "Installing $marzban_version version"
+    echo "Installing $vanish_vpn_version version"
     colorized_echo green "File saved in $APP_DIR/docker-compose.yml"
 
 
@@ -724,8 +724,8 @@ install_marzban() {
 
     sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
     sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
-    sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
-    sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/marzban/db.sqlite3"~' "$APP_DIR/.env"
+    sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/vanish_vpn/xray_config.json"~' "$APP_DIR/.env"
+    sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/vanish_vpn/db.sqlite3"~' "$APP_DIR/.env"
 
 
 
@@ -738,21 +738,21 @@ install_marzban() {
     curl -sL "$FILES_URL_PREFIX/xray_config.json" -o "$DATA_DIR/xray_config.json"
     colorized_echo green "File saved in $DATA_DIR/xray_config.json"
     
-    colorized_echo green "Marzban's files downloaded successfully"
+    colorized_echo green "vanish_vpn's files downloaded successfully"
 }
 
-up_marzban() {
+up_vanish_vpn() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" up -d --remove-orphans
 }
 
-follow_marzban_logs() {
+follow_vanish_vpn_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs -f
 }
 
 status_command() {
     
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
         echo -n "Статус: "
         colorized_echo red "Не установлен"
         exit 1
@@ -760,7 +760,7 @@ status_command() {
     
     detect_compose
     
-    if ! is_marzban_up; then
+    if ! is_vanish_vpn_up; then
         echo -n "Статус: "
         colorized_echo blue "Остановлен"
         exit 1
@@ -785,11 +785,11 @@ status_command() {
     done
 }
 
-prompt_for_marzban_password() {
+prompt_for_vanish_vpn_password() {
     colorized_echo cyan "Этот пароль будет использоваться для доступа к базе данных и должен быть надежным."
     colorized_echo cyan "Если вы не введете собственный пароль, будет автоматически сгенерирован безопасный 20-символьный пароль."
 
-    read -p "Введите пароль для пользователя marzban (или нажмите Enter для генерации безопасного пароля по умолчанию): " MYSQL_PASSWORD
+    read -p "Введите пароль для пользователя vanish_vpn (или нажмите Enter для генерации безопасного пароля по умолчанию): " MYSQL_PASSWORD
 
     if [ -z "$MYSQL_PASSWORD" ]; then
         MYSQL_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)
@@ -805,8 +805,8 @@ install_command() {
 
     # Значения по умолчанию
     database_type="sqlite"
-    marzban_version="latest"
-    marzban_version_set="false"
+    vanish_vpn_version="latest"
+    vanish_vpn_version_set="false"
 
     # Разбор параметров
     while [[ $# -gt 0 ]]; do
@@ -817,21 +817,21 @@ install_command() {
                 shift 2
             ;;
             --dev)
-                if [[ "$marzban_version_set" == "true" ]]; then
+                if [[ "$vanish_vpn_version_set" == "true" ]]; then
                     colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
-                marzban_version="dev"
-                marzban_version_set="true"
+                vanish_vpn_version="dev"
+                vanish_vpn_version_set="true"
                 shift
             ;;
             --version)
-                if [[ "$marzban_version_set" == "true" ]]; then
+                if [[ "$vanish_vpn_version_set" == "true" ]]; then
                     colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
-                marzban_version="$2"
-                marzban_version_set="true"
+                vanish_vpn_version="$2"
+                vanish_vpn_version_set="true"
                 shift 2
             ;;
             *)
@@ -841,9 +841,9 @@ install_command() {
         esac
     done
 
-    # Проверка, установлен ли уже marzban
-    if is_marzban_installed; then
-        colorized_echo red "Marzban уже установлен в $APP_DIR"
+    # Проверка, установлен ли уже vanish_vpn
+    if is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn уже установлен в $APP_DIR"
         read -p "Хотите переустановить предыдущую установку? (y/n) "
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             colorized_echo red "Установка прервана"
@@ -864,7 +864,7 @@ install_command() {
         install_yq
     fi
     detect_compose
-    install_marzban_script
+    install_vanish_vpn_script
     
     # Функция для проверки существования версии в релизах GitHub
     check_version_exists() {
@@ -886,20 +886,20 @@ install_command() {
     }
     
     # Проверка валидности версии
-    if [[ "$marzban_version" == "latest" || "$marzban_version" == "dev" || "$marzban_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        if check_version_exists "$marzban_version"; then
-            install_marzban "$marzban_version" "$database_type"
-            echo "Установка версии $marzban_version"
+    if [[ "$vanish_vpn_version" == "latest" || "$vanish_vpn_version" == "dev" || "$vanish_vpn_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        if check_version_exists "$vanish_vpn_version"; then
+            install_vanish_vpn "$vanish_vpn_version" "$database_type"
+            echo "Установка версии $vanish_vpn_version"
         else
-            echo "Версия $marzban_version не существует. Пожалуйста, введите правильную версию (например, v0.5.2)"
+            echo "Версия $vanish_vpn_version не существует. Пожалуйста, введите правильную версию (например, v0.5.2)"
             exit 1
         fi
     else
         echo "Неверный формат версии. Пожалуйста, введите правильную версию (например, v0.5.2)"
         exit 1
     fi
-    up_marzban
-    follow_marzban_logs
+    up_vanish_vpn
+    follow_vanish_vpn_logs
 }
 
 install_yq() {
@@ -978,23 +978,23 @@ install_yq() {
     fi
 }
 
-down_marzban() {
+down_vanish_vpn() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" down
 }
 
-show_marzban_logs() {
+show_vanish_vpn_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs
 }
 
-follow_marzban_logs() {
+follow_vanish_vpn_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs -f
 }
 
-marzban_cli() {
-    $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" exec -e CLI_PROG_NAME="marzban cli" marzban marzban-cli "$@"
+vanish_vpn_cli() {
+    $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" exec -e CLI_PROG_NAME="vanish_vpn cli" vanish_vpn vanish_vpn-cli "$@"
 }
 
-is_marzban_up() {
+is_vanish_vpn_up() {
     if [ -z "$($COMPOSE -f $COMPOSE_FILE ps -q -a)" ]; then
         return 1
     else
@@ -1004,54 +1004,54 @@ is_marzban_up() {
 
 uninstall_command() {
     check_running_as_root
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
-    read -p "Вы действительно хотите удалить Marzban? (y/n) "
+    read -p "Вы действительно хотите удалить vanish_vpn? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         colorized_echo red "Отменено"
         exit 1
     fi
     
     detect_compose
-    if is_marzban_up; then
-        down_marzban
+    if is_vanish_vpn_up; then
+        down_vanish_vpn
     fi
-    uninstall_marzban_script
-    uninstall_marzban
-    uninstall_marzban_docker_images
+    uninstall_vanish_vpn_script
+    uninstall_vanish_vpn
+    uninstall_vanish_vpn_docker_images
     
-    read -p "Хотите также удалить файлы данных Marzban ($DATA_DIR)? (y/n) "
+    read -p "Хотите также удалить файлы данных vanish_vpn ($DATA_DIR)? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        colorized_echo green "Marzban uninstalled successfully"
+        colorized_echo green "vanish_vpn uninstalled successfully"
     else
-        uninstall_marzban_data_files
-        colorized_echo green "Marzban uninstalled successfully"
+        uninstall_vanish_vpn_data_files
+        colorized_echo green "vanish_vpn uninstalled successfully"
     fi
 }
 
-uninstall_marzban_script() {
-    if [ -f "/usr/local/bin/marzban" ]; then
-        colorized_echo yellow "Удаление скрипта marzban"
-        rm "/usr/local/bin/marzban"
+uninstall_vanish_vpn_script() {
+    if [ -f "/usr/local/bin/vanish_vpn" ]; then
+        colorized_echo yellow "Удаление скрипта vanish_vpn"
+        rm "/usr/local/bin/vanish_vpn"
     fi
 }
 
-uninstall_marzban() {
+uninstall_vanish_vpn() {
     if [ -d "$APP_DIR" ]; then
         colorized_echo yellow "Удаление директории: $APP_DIR"
         rm -r "$APP_DIR"
     fi
 }
 
-uninstall_marzban_docker_images() {
-    images=$(docker images | grep marzban | awk '{print $3}')
+uninstall_vanish_vpn_docker_images() {
+    images=$(docker images | grep vanish_vpn | awk '{print $3}')
     
     if [ -n "$images" ]; then
-        colorized_echo yellow "Удаление Docker образов Marzban"
+        colorized_echo yellow "Удаление Docker образов vanish_vpn"
         for image in $images; do
             if docker rmi "$image" >/dev/null 2>&1; then
                 colorized_echo yellow "Образ $image удален"
@@ -1060,7 +1060,7 @@ uninstall_marzban_docker_images() {
     fi
 }
 
-uninstall_marzban_data_files() {
+uninstall_vanish_vpn_data_files() {
     if [ -d "$DATA_DIR" ]; then
         colorized_echo yellow "Удаление директории: $DATA_DIR"
         rm -r "$DATA_DIR"
@@ -1069,7 +1069,7 @@ uninstall_marzban_data_files() {
 
 restart_command() {
     help() {
-        colorized_echo red "Использование: marzban restart [опции]"
+        colorized_echo red "Использование: vanish_vpn restart [опции]"
         echo
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1095,25 +1095,25 @@ restart_command() {
         shift
     done
     
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    down_marzban
-    up_marzban
+    down_vanish_vpn
+    up_vanish_vpn
     if [ "$no_logs" = false ]; then
-        follow_marzban_logs
+        follow_vanish_vpn_logs
     fi
-    colorized_echo green "Marzban успешно перезапущен!"
+    colorized_echo green "vanish_vpn успешно перезапущен!"
 }
 
 logs_command() {
     help() {
-        colorized_echo red "Использование: marzban logs [опции]"
+        colorized_echo red "Использование: vanish_vpn logs [опции]"
         echo ""
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1139,64 +1139,64 @@ logs_command() {
         shift
     done
     
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_marzban_up; then
-        colorized_echo red "Marzban не запущен."
+    if ! is_vanish_vpn_up; then
+        colorized_echo red "vanish_vpn не запущен."
         exit 1
     fi
     
     if [ "$no_follow" = true ]; then
-        show_marzban_logs
+        show_vanish_vpn_logs
     else
-        follow_marzban_logs
+        follow_vanish_vpn_logs
     fi
 }
 
 down_command() {
     
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_marzban_up; then
-        colorized_echo red "Marzban уже остановлен"
+    if ! is_vanish_vpn_up; then
+        colorized_echo red "vanish_vpn уже остановлен"
         exit 1
     fi
     
-    down_marzban
+    down_vanish_vpn
 }
 
 cli_command() {
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_marzban_up; then
-        colorized_echo red "Marzban не запущен."
+    if ! is_vanish_vpn_up; then
+        colorized_echo red "vanish_vpn не запущен."
         exit 1
     fi
     
-    marzban_cli "$@"
+    vanish_vpn_cli "$@"
 }
 
 up_command() {
     help() {
-        colorized_echo red "Использование: marzban up [опции]"
+        colorized_echo red "Использование: vanish_vpn up [опции]"
         echo ""
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1222,55 +1222,55 @@ up_command() {
         shift
     done
     
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if is_marzban_up; then
-        colorized_echo red "Marzban уже запущен"
+    if is_vanish_vpn_up; then
+        colorized_echo red "vanish_vpn уже запущен"
         exit 1
     fi
     
-    up_marzban
+    up_vanish_vpn
     if [ "$no_logs" = false ]; then
-        follow_marzban_logs
+        follow_vanish_vpn_logs
     fi
 }
 
 update_command() {
     check_running_as_root
-    # Проверка установлен ли marzban
-    if ! is_marzban_installed; then
-        colorized_echo red "Marzban не установлен!"
+    # Проверка установлен ли vanish_vpn
+    if ! is_vanish_vpn_installed; then
+        colorized_echo red "vanish_vpn не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    update_marzban_script
+    update_vanish_vpn_script
     colorized_echo blue "Загрузка последней версии"
-    update_marzban
+    update_vanish_vpn
     
-    colorized_echo blue "Перезапуск служб Marzban"
-    down_marzban
-    up_marzban
+    colorized_echo blue "Перезапуск служб vanish_vpn"
+    down_vanish_vpn
+    up_vanish_vpn
     
-    colorized_echo blue "Marzban успешно обновлен"
+    colorized_echo blue "vanish_vpn успешно обновлен"
 }
 
-update_marzban_script() {
+update_vanish_vpn_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/marzban.sh"
-    colorized_echo blue "Обновление скрипта marzban"
-    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
-    colorized_echo green "Скрипт marzban успешно обновлен"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish_vpn.sh"
+    colorized_echo blue "Обновление скрипта vanish_vpn"
+    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish_vpn
+    colorized_echo green "Скрипт vanish_vpn успешно обновлен"
 }
 
-update_marzban() {
+update_vanish_vpn() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" pull
 }
 
@@ -1313,7 +1313,7 @@ edit_env_command() {
 usage() {
     local script_name="${0##*/}"
     colorized_echo blue "=============================="
-    colorized_echo magenta "           Справка Marzban"
+    colorized_echo magenta "           Справка vanish_vpn"
     colorized_echo blue "=============================="
     colorized_echo cyan "Использование:"
     echo "  ${script_name} [команда]"
@@ -1325,13 +1325,13 @@ usage() {
     colorized_echo yellow "  restart         $(tput sgr0)– Перезапуск служб"
     colorized_echo yellow "  status          $(tput sgr0)– Показать статус"
     colorized_echo yellow "  logs            $(tput sgr0)– Показать логи"
-    colorized_echo yellow "  cli             $(tput sgr0)– Интерфейс командной строки Marzban"
-    colorized_echo yellow "  install         $(tput sgr0)– Установить Marzban"
+    colorized_echo yellow "  cli             $(tput sgr0)– Интерфейс командной строки vanish_vpn"
+    colorized_echo yellow "  install         $(tput sgr0)– Установить vanish_vpn"
     colorized_echo yellow "  update          $(tput sgr0)– Обновить до последней версии"
-    colorized_echo yellow "  uninstall       $(tput sgr0)– Удалить Marzban"
-    colorized_echo yellow "  install-script  $(tput sgr0)– Установить скрипт Marzban"
+    colorized_echo yellow "  uninstall       $(tput sgr0)– Удалить vanish_vpn"
+    colorized_echo yellow "  install-script  $(tput sgr0)– Установить скрипт vanish_vpn"
     colorized_echo yellow "  backup          $(tput sgr0)– Запуск ручного резервного копирования"
-    colorized_echo yellow "  backup-service  $(tput sgr0)– Сервис резервного копирования Marzban в Telegram и новая задача в crontab"
+    colorized_echo yellow "  backup-service  $(tput sgr0)– Сервис резервного копирования vanish_vpn в Telegram и новая задача в crontab"
     colorized_echo yellow "  core-update     $(tput sgr0)– Обновить/Изменить ядро Xray"
     colorized_echo yellow "  edit            $(tput sgr0)– Редактировать docker-compose.yml (через редактор nano или vi)"
     colorized_echo yellow "  edit-env        $(tput sgr0)– Редактировать файл окружения (через редактор nano или vi)"
@@ -1370,7 +1370,7 @@ case "$1" in
     uninstall)
         shift; uninstall_command "$@";;
     install-script)
-        shift; install_marzban_script "$@";;
+        shift; install_vanish_vpn_script "$@";;
     core-update)
         shift; update_core_command "$@";;
     edit)
