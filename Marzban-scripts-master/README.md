@@ -1,62 +1,62 @@
 # Marzban-scripts
-Scripts for Marzban
+Скрипты для Marzban
 
-## Installing Marzban
-- **Install Marzban with SQLite**:
+## Установка Marzban
+- **Установка Marzban с SQLite**:
 
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban.sh)" @ install
 ```
 
-- **Install Marzban with MySQL**:
+- **Установка Marzban с MySQL**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mysql
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban.sh)" @ install --database mysql
   ```
 
-- **Install Marzban with MariaDB**:
+- **Установка Marzban с MariaDB**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban.sh)" @ install --database mariadb
   ```
   
-- **Install Marzban with MariaDB and Dev branch**:
+- **Установка Marzban с MariaDB и веткой Dev**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb --dev
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban.sh)" @ install --database mariadb --dev
   ```
 
-- **Install Marzban with MariaDB and Manual version**:
+- **Установка Marzban с MariaDB и указанной версией**:
 
   ```bash
-  sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb --version v0.5.2
+  sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban.sh)" @ install --database mariadb --version v0.5.2
   ```
 
-- **Update or Change Xray-core Version**:
+- **Обновление или изменение версии Xray-core**:
 
   ```bash
   sudo marzban core-update
   ```
 
 
-## Installing Marzban-node
-Install Marzban-node on your server using this command
+## Установка Marzban-node
+Установите Marzban-node на вашем сервере с помощью этой команды:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban-node.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban-node.sh)" @ install
 ```
-Install Marzban-node on your server using this command with custom name:
+Установите Marzban-node на вашем сервере с пользовательским именем:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban-node.sh)" @ install --name marzban-node2
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban-node.sh)" @ install --name marzban-node2
 ```
-Or you can only install this script (marzban-node command) on your server by using this command
+Или вы можете просто установить этот скрипт (команду marzban-node) на вашем сервере с помощью этой команды:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban-node.sh)" @ install-script
+sudo bash -c "$(curl -sL https://github.com/SiberMix/vpn_seller/raw/master/Marzban-scripts-master/marzban-node.sh)" @ install-script
 ```
 
-Use `help` to view all commands:
+Используйте `help` для просмотра всех команд:
 ```marzban-node help```
 
-- **Update or Change Xray-core Version**:
+- **Обновление или изменение версии Xray-core**:
 
   ```bash
   sudo marzban-node core-update

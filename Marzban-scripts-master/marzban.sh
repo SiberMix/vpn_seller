@@ -36,13 +36,13 @@ colorized_echo() {
 
 check_running_as_root() {
     if [ "$(id -u)" != "0" ]; then
-        colorized_echo red "This command must be run as root."
+        colorized_echo red "Эта команда должна быть запущена от имени root."
         exit 1
     fi
 }
 
 detect_os() {
-    # Detect the operating system
+    # Определение операционной системы
     if [ -f /etc/lsb-release ]; then
         OS=$(lsb_release -si)
     elif [ -f /etc/os-release ]; then
@@ -52,14 +52,13 @@ detect_os() {
     elif [ -f /etc/arch-release ]; then
         OS="Arch"
     else
-        colorized_echo red "Unsupported operating system"
+        colorized_echo red "Неподдерживаемая операционная система"
         exit 1
     fi
 }
 
-
 detect_and_update_package_manager() {
-    colorized_echo blue "Updating package manager"
+    colorized_echo blue "Обновление пакетного менеджера"
     if [[ "$OS" == "Ubuntu"* ]] || [[ "$OS" == "Debian"* ]]; then
         PKG_MANAGER="apt-get"
         $PKG_MANAGER update
@@ -77,18 +76,18 @@ detect_and_update_package_manager() {
         PKG_MANAGER="zypper"
         $PKG_MANAGER refresh
     else
-        colorized_echo red "Unsupported operating system"
+        colorized_echo red "Неподдерживаемая операционная система"
         exit 1
     fi
 }
 
-install_package () {
+install_package() {
     if [ -z $PKG_MANAGER ]; then
         detect_and_update_package_manager
     fi
     
     PACKAGE=$1
-    colorized_echo blue "Installing $PACKAGE"
+    colorized_echo blue "Установка $PACKAGE"
     if [[ "$OS" == "Ubuntu"* ]] || [[ "$OS" == "Debian"* ]]; then
         $PKG_MANAGER -y install "$PACKAGE"
     elif [[ "$OS" == "CentOS"* ]] || [[ "$OS" == "AlmaLinux"* ]]; then
@@ -98,36 +97,36 @@ install_package () {
     elif [ "$OS" == "Arch" ]; then
         $PKG_MANAGER -S --noconfirm "$PACKAGE"
     else
-        colorized_echo red "Unsupported operating system"
+        colorized_echo red "Неподдерживаемая операционная система"
         exit 1
     fi
 }
 
 install_docker() {
-    # Install Docker and Docker Compose using the official installation script
-    colorized_echo blue "Installing Docker"
+    # Установка Docker и Docker Compose используя официальный установочный скрипт
+    colorized_echo blue "Установка Docker"
     curl -fsSL https://get.docker.com | sh
-    colorized_echo green "Docker installed successfully"
+    colorized_echo green "Docker успешно установлен"
 }
 
 detect_compose() {
-    # Check if docker compose command exists
+    # Проверка наличия команды docker compose
     if docker compose version >/dev/null 2>&1; then
         COMPOSE='docker compose'
     elif docker-compose version >/dev/null 2>&1; then
         COMPOSE='docker-compose'
     else
-        colorized_echo red "docker compose not found"
+        colorized_echo red "docker compose не найден"
         exit 1
     fi
 }
 
 install_marzban_script() {
-    FETCH_REPO="Gozargah/Marzban-scripts"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/marzban.sh"
-    colorized_echo blue "Installing marzban script"
+    FETCH_REPO="SiberMix/vpn_seller"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/Marzban-scripts-master/marzban.sh"
+    colorized_echo blue "Установка скрипта marzban"
     curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
-    colorized_echo green "marzban script installed successfully"
+    colorized_echo green "Скрипт marzban успешно установлен"
 }
 
 is_marzban_installed() {
@@ -187,12 +186,12 @@ identify_the_operating_system_and_architecture() {
                 ARCH='s390x'
             ;;
             *)
-                echo "error: The architecture is not supported."
+                echo "ошибка: Архитектура не поддерживается."
                 exit 1
             ;;
         esac
     else
-        echo "error: This operating system is not supported."
+        echo "ошибка: Эта операционная система не поддерживается."
         exit 1
     fi
 }
@@ -208,25 +207,25 @@ send_backup_to_telegram() {
             if [[ "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
                 export "$key"="$value"
             else
-                colorized_echo yellow "Skipping invalid line in .env: $key=$value"
+                colorized_echo yellow "Пропуск некорректной строки в .env: $key=$value"
             fi
         done < "$ENV_FILE"
     else
-        colorized_echo red "Environment file (.env) not found."
+        colorized_echo red "Файл окружения (.env) не найден."
         exit 1
     fi
 
     if [ "$BACKUP_SERVICE_ENABLED" != "true" ]; then
-        colorized_echo yellow "Backup service is not enabled. Skipping Telegram upload."
+        colorized_echo yellow "Сервис резервного копирования не включен. Пропуск загрузки в Telegram."
         return
     fi
 
-    local server_ip=$(curl -s ifconfig.me || echo "Unknown IP")
+    local server_ip=$(curl -s ifconfig.me || echo "Неизвестный IP")
     local latest_backup=$(ls -t "$APP_DIR/backup" | head -n 1)
     local backup_path="$APP_DIR/backup/$latest_backup"
 
     if [ ! -f "$backup_path" ]; then
-        colorized_echo red "No backups found to send."
+        colorized_echo red "Резервные копии для отправки не найдены."
         return
     fi
 
@@ -237,28 +236,26 @@ send_backup_to_telegram() {
     mkdir -p "$split_dir"
 
     if [ "$backup_size" -gt 49 ]; then
-        colorized_echo yellow "Backup is larger than 49MB. Splitting the archive..."
+        colorized_echo yellow "Резервная копия больше 49МБ. Разделение архива..."
         split -b 49M "$backup_path" "$split_dir/part_"
         is_single_file=false
     else
         cp "$backup_path" "$split_dir/part_aa"
     fi
 
-
     local backup_time=$(date "+%Y-%m-%d %H:%M:%S %Z")
-
 
     for part in "$split_dir"/*; do
         local part_name=$(basename "$part")
         local custom_filename="backup_${part_name}.tar.gz"
-        local caption="📦 *Backup Information*\n🌐 *Server IP*: \`${server_ip}\`\n📁 *Backup File*: \`${custom_filename}\`\n⏰ *Backup Time*: \`${backup_time}\`"
+        local caption="📦 *Информация о резервной копии*\n🌐 *IP Сервера*: \`${server_ip}\`\n📁 *Файл*: \`${custom_filename}\`\n⏰ *Время*: \`${backup_time}\`"
         curl -s -F chat_id="$BACKUP_TELEGRAM_CHAT_ID" \
             -F document=@"$part;filename=$custom_filename" \
             -F caption="$(echo -e "$caption" | sed 's/-/\\-/g;s/\./\\./g;s/_/\\_/g')" \
             -F parse_mode="MarkdownV2" \
             "https://api.telegram.org/bot$BACKUP_TELEGRAM_BOT_KEY/sendDocument" >/dev/null 2>&1 && \
-        colorized_echo green "Backup part $custom_filename successfully sent to Telegram." || \
-        colorized_echo red "Failed to send backup part $custom_filename to Telegram."
+        colorized_echo green "Часть резервной копии $custom_filename успешно отправлена в Telegram." || \
+        colorized_echo red "Не удалось отправить часть резервной копии $custom_filename в Telegram."
     done
 
     rm -rf "$split_dir"
@@ -267,52 +264,45 @@ send_backup_to_telegram() {
 send_backup_error_to_telegram() {
     local error_messages=$1
     local log_file=$2
-    local server_ip=$(curl -s ifconfig.me || echo "Unknown IP")
+    local server_ip=$(curl -s ifconfig.me || echo "Неизвестный IP")
     local error_time=$(date "+%Y-%m-%d %H:%M:%S %Z")
-    local message="⚠️ *Backup Error Notification*\n"
-    message+="🌐 *Server IP*: \`${server_ip}\`\n"
-    message+="❌ *Errors*:\n\`${error_messages//_/\\_}\`\n"
-    message+="⏰ *Time*: \`${error_time}\`"
-
+    local message="⚠️ *Уведомление об ошибке резервного копирования*\n"
+    message+="🌐 *IP Сервера*: \`${server_ip}\`\n"
+    message+="❌ *Ошибки*:\n\`${error_messages//_/\\_}\`\n"
+    message+="⏰ *Время*: \`${error_time}\`"
 
     message=$(echo -e "$message" | sed 's/-/\\-/g;s/\./\\./g;s/_/\\_/g;s/(/\\(/g;s/)/\\)/g')
 
     local max_length=1000
     if [ ${#message} -gt $max_length ]; then
-        message="${message:0:$((max_length - 50))}...\n\`[Message truncated]\`"
+        message="${message:0:$((max_length - 50))}...\n\`[Сообщение обрезано]\`"
     fi
-
 
     curl -s -X POST "https://api.telegram.org/bot$BACKUP_TELEGRAM_BOT_KEY/sendMessage" \
         -d chat_id="$BACKUP_TELEGRAM_CHAT_ID" \
         -d parse_mode="MarkdownV2" \
         -d text="$message" >/dev/null 2>&1 && \
-    colorized_echo green "Backup error notification sent to Telegram." || \
-    colorized_echo red "Failed to send error notification to Telegram."
-
+    colorized_echo green "Уведомление об ошибке резервного копирования отправлено в Telegram." || \
+    colorized_echo red "Не удалось отправить уведомление об ошибке в Telegram."
 
     if [ -f "$log_file" ]; then
         response=$(curl -s -w "%{http_code}" -o /tmp/tg_response.json \
             -F chat_id="$BACKUP_TELEGRAM_CHAT_ID" \
             -F document=@"$log_file;filename=backup_error.log" \
-            -F caption="📜 *Backup Error Log* - ${error_time}" \
+            -F caption="📜 *Лог ошибок резервного копирования* - ${error_time}" \
             "https://api.telegram.org/bot$BACKUP_TELEGRAM_BOT_KEY/sendDocument")
 
         http_code="${response:(-3)}"
         if [ "$http_code" -eq 200 ]; then
-            colorized_echo green "Backup error log sent to Telegram."
+            colorized_echo green "Лог ошибок резервного копирования отправлен в Telegram."
         else
-            colorized_echo red "Failed to send backup error log to Telegram. HTTP code: $http_code"
+            colorized_echo red "Не удалось отправить лог ошибок в Telegram. HTTP код: $http_code"
             cat /tmp/tg_response.json
         fi
     else
-        colorized_echo red "Log file not found: $log_file"
+        colorized_echo red "Файл лога не найден: $log_file"
     fi
 }
-
-
-
-
 
 backup_service() {
     local telegram_bot_key=""
@@ -321,7 +311,7 @@ backup_service() {
     local interval_hours=""
 
     colorized_echo blue "====================================="
-    colorized_echo blue "      Welcome to Backup Service      "
+    colorized_echo blue "      Добро пожаловать в сервис резервного копирования      "
     colorized_echo blue "====================================="
 
     if grep -q "BACKUP_SERVICE_ENABLED=true" "$ENV_FILE"; then
@@ -336,81 +326,81 @@ backup_service() {
         fi
 
         colorized_echo green "====================================="
-        colorized_echo green "Current Backup Configuration:"
-        colorized_echo cyan "Telegram Bot API Key: $telegram_bot_key"
-        colorized_echo cyan "Telegram Chat ID: $telegram_chat_id"
-        colorized_echo cyan "Backup Interval: Every $interval_hours hour(s)"
+        colorized_echo green "Текущая конфигурация резервного копирования:"
+        colorized_echo cyan "API ключ Telegram бота: $telegram_bot_key"
+        colorized_echo cyan "ID чата Telegram: $telegram_chat_id"
+        colorized_echo cyan "Интервал копирования: Каждые $interval_hours час(ов)"
         colorized_echo green "====================================="
-        echo "Choose an option:"
-        echo "1. Reconfigure Backup Service"
-        echo "2. Remove Backup Service"
-        echo "3. Exit"
-        read -p "Enter your choice (1-3): " user_choice
+        echo "Выберите опцию:"
+        echo "1. Переконфигурировать сервис резервного копирования"
+        echo "2. Удалить сервис резервного копирования"
+        echo "3. Выход"
+        read -p "Введите ваш выбор (1-3): " user_choice
 
         case $user_choice in
             1)
-                colorized_echo yellow "Starting reconfiguration..."
+                colorized_echo yellow "Начинаем переконфигурацию..."
                 remove_backup_service
                 ;;
             2)
-                colorized_echo yellow "Removing Backup Service..."
+                colorized_echo yellow "Удаление сервиса резервного копирования..."
                 remove_backup_service
                 return
                 ;;
             3)
-                colorized_echo yellow "Exiting..."
+                colorized_echo yellow "Выход..."
                 return
                 ;;
             *)
-                colorized_echo red "Invalid choice. Exiting."
+                colorized_echo red "Неверный выбор. Выход."
                 return
                 ;;
         esac
     else
-        colorized_echo yellow "No backup service is currently configured."
+        colorized_echo yellow "Сервис резервного копирования не настроен."
     fi
 
     while true; do
-        printf "Enter your Telegram bot API key: "
+        printf "Введите API ключ вашего Telegram бота: "
         read telegram_bot_key
         if [[ -n "$telegram_bot_key" ]]; then
             break
         else
-            colorized_echo red "API key cannot be empty. Please try again."
+            colorized_echo red "API ключ не может быть пустым. Попробуйте снова."
         fi
     done
 
     while true; do
-        printf "Enter your Telegram chat ID: "
+        printf "Введите ID чата Telegram: "
         read telegram_chat_id
         if [[ -n "$telegram_chat_id" ]]; then
             break
         else
-            colorized_echo red "Chat ID cannot be empty. Please try again."
+            colorized_echo red "ID чата не может быть пустым. Попробуйте снова."
         fi
     done
 
     while true; do
-        printf "Set up the backup interval in hours (1-24):\n"
+        printf "Установите интервал резервного копирования в часах (1-24):\n"
         read interval_hours
 
         if ! [[ "$interval_hours" =~ ^[0-9]+$ ]]; then
-            colorized_echo red "Invalid input. Please enter a valid number."
+            colorized_echo red "Неверный ввод. Пожалуйста, введите корректное число."
             continue
         fi
 
         if [[ "$interval_hours" -eq 24 ]]; then
             cron_schedule="0 0 * * *"
-            colorized_echo green "Setting backup to run daily at midnight."
+            colorized_echo green "Установка резервного копирования на ежедневное выполнение в полночь."
             break
         fi
 
         if [[ "$interval_hours" -ge 1 && "$interval_hours" -le 23 ]]; then
             cron_schedule="0 */$interval_hours * * *"
-            colorized_echo green "Setting backup to run every $interval_hours hour(s)."
+            colorized_echo green "Установка резервного копирования каждые $interval_hours час(ов)."
             break
         else
-            colorized_echo red "Invalid input. Please enter a number between 1-24."
+            colorized_echo red "Неверный ввод. Пожалуйста, введите число от 1 до 24."
         fi
     done
 
@@ -421,27 +411,26 @@ backup_service() {
 
     {
         echo ""
-        echo "# Backup service configuration"
+        echo "# Конфигурация сервиса резервного копирования"
         echo "BACKUP_SERVICE_ENABLED=true"
         echo "BACKUP_TELEGRAM_BOT_KEY=$telegram_bot_key"
         echo "BACKUP_TELEGRAM_CHAT_ID=$telegram_chat_id"
         echo "BACKUP_CRON_SCHEDULE=\"$cron_schedule\""
     } >> "$ENV_FILE"
 
-    colorized_echo green "Backup service configuration saved in $ENV_FILE."
+    colorized_echo green "Конфигурация сервиса резервного копирования сохранена в $ENV_FILE."
 
     local backup_command="$(which bash) -c '$APP_NAME backup'"
     add_cron_job "$cron_schedule" "$backup_command"
 
-    colorized_echo green "Backup service successfully configured."
+    colorized_echo green "Сервис резервного копирования успешно настроен."
     if [[ "$interval_hours" -eq 24 ]]; then
-        colorized_echo cyan "Backups will be sent to Telegram daily (every 24 hours at midnight)."
+        colorized_echo cyan "Резервные копии будут отправляться в Telegram ежедневно (каждые 24 часа в полночь)."
     else
-        colorized_echo cyan "Backups will be sent to Telegram every $interval_hours hour(s)."
+        colorized_echo cyan "Резервные копии будут отправляться в Telegram каждые $interval_hours час(ов)."
     fi
     colorized_echo green "====================================="
 }
-
 
 add_cron_job() {
     local schedule="$1"
@@ -453,16 +442,15 @@ add_cron_job() {
     echo "$schedule $command # marzban-backup-service" >> "$temp_cron"
     
     if crontab "$temp_cron"; then
-        colorized_echo green "Cron job successfully added."
+        colorized_echo green "Задача Cron успешно добавлена."
     else
-        colorized_echo red "Failed to add cron job. Please check manually."
+        colorized_echo red "Не удалось добавить задачу Cron. Пожалуйста, проверьте вручную."
     fi
     rm -f "$temp_cron"
 }
 
 remove_backup_service() {
-    colorized_echo red "in process..."
-
+    colorized_echo red "в процессе..."
 
     sed -i '/^# Backup service configuration/d' "$ENV_FILE"
     sed -i '/BACKUP_SERVICE_ENABLED/d' "$ENV_FILE"
@@ -476,14 +464,14 @@ remove_backup_service() {
     sed -i '/# marzban-backup-service/d' "$temp_cron"
 
     if crontab "$temp_cron"; then
-        colorized_echo green "Backup service task removed from crontab."
+        colorized_echo green "Задача сервиса резервного копирования удалена из crontab."
     else
-        colorized_echo red "Failed to update crontab. Please check manually."
+        colorized_echo red "Не удалось обновить crontab. Пожалуйста, проверьте вручную."
     fi
 
     rm -f "$temp_cron"
 
-    colorized_echo green "Backup service has been removed."
+    colorized_echo green "Сервис резервного копирования был удален."
 }
 
 backup_command() {
@@ -494,7 +482,7 @@ backup_command() {
     local error_messages=()
     local log_file="/var/log/marzban_backup_error.log"
     > "$log_file"
-    echo "Backup Log - $(date)" > "$log_file"
+    echo "Лог резервного копирования - $(date)" > "$log_file"
 
     if ! command -v rsync >/dev/null 2>&1; then
         detect_os
@@ -515,12 +503,12 @@ backup_command() {
             if [[ "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
                 export "$key"="$value"
             else
-                echo "Skipping invalid line in .env: $key=$value" >> "$log_file"
+                echo "Пропуск некорректной строки в .env: $key=$value" >> "$log_file"
             fi
         done < "$ENV_FILE"
     else
-        error_messages+=("Environment file (.env) not found.")
-        echo "Environment file (.env) not found." >> "$log_file"
+        error_messages+=("Файл окружения (.env) не найден.")
+        echo "Файл окружения (.env) не найден." >> "$log_file"
         send_backup_error_to_telegram "${error_messages[*]}" "$log_file"
         exit 1
     fi
@@ -541,29 +529,28 @@ backup_command() {
         if [[ ! "$sqlite_file" =~ ^/ ]]; then
             sqlite_file="/$sqlite_file"
         fi
-
     fi
 
     if [ -n "$db_type" ]; then
-        echo "Database detected: $db_type" >> "$log_file"
+        echo "База данных обнаружена: $db_type" >> "$log_file"
         case $db_type in
             mariadb)
                 if ! docker exec "$container_name" mariadb-dump -u root -p"$MYSQL_ROOT_PASSWORD" --all-databases > "$temp_dir/db_backup.sql" 2>>"$log_file"; then
-                    error_messages+=("MariaDB dump failed.")
+                    error_messages+=("Ошибка дампа MariaDB.")
                 fi
                 ;;
             mysql)
                 if ! docker exec "$container_name" mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" --all-databases > "$temp_dir/db_backup.sql" 2>>"$log_file"; then
-                    error_messages+=("MySQL dump failed.")
+                    error_messages+=("Ошибка дампа MySQL.")
                 fi
                 ;;
             sqlite)
                 if [ -f "$sqlite_file" ]; then
                     if ! cp "$sqlite_file" "$temp_dir/db_backup.sqlite" 2>>"$log_file"; then
-                        error_messages+=("Failed to copy SQLite database.")
+                        error_messages+=("Не удалось скопировать базу данных SQLite.")
                     fi
                 else
-                    error_messages+=("SQLite database file not found at $sqlite_file.")
+                    error_messages+=("Файл базы данных SQLite не найден: $sqlite_file.")
                 fi
                 ;;
         esac
@@ -574,8 +561,8 @@ backup_command() {
     rsync -av --exclude 'xray-core' --exclude 'mysql' "$DATA_DIR/" "$temp_dir/marzban_data/" >>"$log_file" 2>&1
 
     if ! tar -czf "$backup_file" -C "$temp_dir" .; then
-        error_messages+=("Failed to create backup archive.")
-        echo "Failed to create backup archive." >> "$log_file"
+        error_messages+=("Не удалось создать архив резервной копии.")
+        echo "Не удалось создать архив резервной копии." >> "$log_file"
     fi
 
     rm -rf "$temp_dir"
@@ -584,11 +571,9 @@ backup_command() {
         send_backup_error_to_telegram "${error_messages[*]}" "$log_file"
         return
     fi
-    colorized_echo green "Backup created: $backup_file"
+    colorized_echo green "Резервная копия создана: $backup_file"
     send_backup_to_telegram "$backup_file"
 }
-
-
 
 get_xray_core() {
     identify_the_operating_system_and_architecture
@@ -608,15 +593,15 @@ get_xray_core() {
     print_menu() {
         clear
         echo -e "\033[1;32m==============================\033[0m"
-        echo -e "\033[1;32m      Xray-core Installer     \033[0m"
+        echo -e "\033[1;32m      Установщик Xray-core     \033[0m"
         echo -e "\033[1;32m==============================\033[0m"
-        echo -e "\033[1;33mAvailable Xray-core versions:\033[0m"
+        echo -e "\033[1;33mДоступные версии Xray-core:\033[0m"
         for ((i=0; i<${#versions[@]}; i++)); do
             echo -e "\033[1;34m$((i + 1)):\033[0m ${versions[i]}"
         done
         echo -e "\033[1;32m==============================\033[0m"
-        echo -e "\033[1;35mM:\033[0m Enter a version manually"
-        echo -e "\033[1;31mQ:\033[0m Quit"
+        echo -e "\033[1;35mM:\033[0m Ввести версию вручную"
+        echo -e "\033[1;31mQ:\033[0m Выход"
         echo -e "\033[1;32m==============================\033[0m"
     }
 
@@ -626,7 +611,7 @@ get_xray_core() {
 
     while true; do
         print_menu
-        read -p "Choose a version to install (1-${#versions[@]}), or press M to enter manually, Q to quit: " choice
+        read -p "Выберите версию для установки (1-${#versions[@]}), или нажмите M для ручного ввода, Q для выхода: " choice
         
         if [[ "$choice" =~ ^[1-9][0-9]*$ ]] && [ "$choice" -le "${#versions[@]}" ]; then
             choice=$((choice - 1))
@@ -634,33 +619,33 @@ get_xray_core() {
             break
         elif [ "$choice" == "M" ] || [ "$choice" == "m" ]; then
             while true; do
-                read -p "Enter the version manually (e.g., v1.2.3): " custom_version
+                read -p "Введите версию вручную (например, v1.2.3): " custom_version
                 if [ "$(validate_version "$custom_version")" == "valid" ]; then
                     selected_version="$custom_version"
                     break 2
                 else
-                    echo -e "\033[1;31mInvalid version or version does not exist. Please try again.\033[0m"
+                    echo -e "\033[1;31mНеверная версия или версия не существует. Попробуйте снова.\033[0m"
                 fi
             done
         elif [ "$choice" == "Q" ] || [ "$choice" == "q" ]; then
-            echo -e "\033[1;31mExiting.\033[0m"
+            echo -e "\033[1;31mВыход.\033[0m"
             exit 0
         else
-            echo -e "\033[1;31mInvalid choice. Please try again.\033[0m"
+            echo -e "\033[1;31mНеверный выбор. Попробуйте снова.\033[0m"
             sleep 2
         fi
     done
 
-    echo -e "\033[1;32mSelected version $selected_version for installation.\033[0m"
+    echo -e "\033[1;32mВыбрана версия $selected_version для установки.\033[0m"
 
-    # Check if the required packages are installed
+    # Проверка установленных пакетов
     if ! command -v unzip >/dev/null 2>&1; then
-        echo -e "\033[1;33mInstalling required packages...\033[0m"
+        echo -e "\033[1;33mУстановка необходимых пакетов...\033[0m"
         detect_os
         install_package unzip
     fi
     if ! command -v wget >/dev/null 2>&1; then
-        echo -e "\033[1;33mInstalling required packages...\033[0m"
+        echo -e "\033[1;33mУстановка необходимых пакетов...\033[0m"
         detect_os
         install_package wget
     fi
@@ -671,55 +656,55 @@ get_xray_core() {
     xray_filename="Xray-linux-$ARCH.zip"
     xray_download_url="https://github.com/XTLS/Xray-core/releases/download/${selected_version}/${xray_filename}"
 
-    echo -e "\033[1;33mDownloading Xray-core version ${selected_version}...\033[0m"
+    echo -e "\033[1;33mЗагрузка Xray-core версии ${selected_version}...\033[0m"
     wget -q -O "${xray_filename}" "${xray_download_url}"
 
-    echo -e "\033[1;33mExtracting Xray-core...\033[0m"
+    echo -e "\033[1;33mРаспаковка Xray-core...\033[0m"
     unzip -o "${xray_filename}" >/dev/null 2>&1
     rm "${xray_filename}"
 }
 
-# Function to update the Marzban Main core
+# Функция обновления основного ядра Marzban
 update_core_command() {
     check_running_as_root
     get_xray_core
-    # Change the Marzban core
+    # Изменение ядра Marzban
     xray_executable_path="XRAY_EXECUTABLE_PATH=\"/var/lib/marzban/xray-core/xray\""
     
-    echo "Changing the Marzban core..."
-    # Check if the XRAY_EXECUTABLE_PATH string already exists in the .env file
+    echo "Изменение ядра Marzban..."
+    # Проверка существования строки XRAY_EXECUTABLE_PATH в файле .env
     if ! grep -q "^XRAY_EXECUTABLE_PATH=" "$ENV_FILE"; then
-        # If the string does not exist, add it
+        # Если строка не существует, добавляем её
         echo "${xray_executable_path}" >> "$ENV_FILE"
     else
-        # Update the existing XRAY_EXECUTABLE_PATH line
+        # Обновляем существующую строку XRAY_EXECUTABLE_PATH
         sed -i "s~^XRAY_EXECUTABLE_PATH=.*~${xray_executable_path}~" "$ENV_FILE"
     fi
     
-    # Restart Marzban
-    colorized_echo red "Restarting Marzban..."
+    # Перезапуск Marzban
+    colorized_echo red "Перезапуск Marzban..."
     if restart_command -n >/dev/null 2>&1; then
-        colorized_echo green "Marzban successfully restarted!"
+        colorized_echo green "Marzban успешно перезапущен!"
     else
-        colorized_echo red "Marzban restart failed!"
+        colorized_echo red "Ошибка перезапуска Marzban!"
     fi
-    colorized_echo blue "Installation of Xray-core version $selected_version completed."
+    colorized_echo blue "Установка версии Xray-core $selected_version завершена."
 }
 
 install_marzban() {
     local marzban_version=$1
     local database_type=$2
-    # Fetch releases
+    # Получение релизов
     FILES_URL_PREFIX="https://raw.githubusercontent.com/Gozargah/Marzban/master"
     
     mkdir -p "$DATA_DIR"
     mkdir -p "$APP_DIR"
     
-    colorized_echo blue "Setting up docker-compose.yml"
+    colorized_echo blue "Настройка docker-compose.yml"
     docker_file_path="$APP_DIR/docker-compose.yml"
     
     if [ "$database_type" == "mariadb" ]; then
-        # Generate docker-compose.yml with MariaDB content
+        # Генерация docker-compose.yml с содержимым MariaDB
         cat > "$docker_file_path" <<EOF
 services:
   marzban:
@@ -746,20 +731,20 @@ services:
       MYSQL_USER: \${MYSQL_USER}
       MYSQL_PASSWORD: \${MYSQL_PASSWORD}
     command:
-      - --bind-address=127.0.0.1                  # Restricts access to localhost for increased security
-      - --character_set_server=utf8mb4            # Sets UTF-8 character set for full Unicode support
-      - --collation_server=utf8mb4_unicode_ci     # Defines collation for Unicode
-      - --host-cache-size=0                       # Disables host cache to prevent DNS issues
-      - --innodb-open-files=1024                  # Sets the limit for InnoDB open files
-      - --innodb-buffer-pool-size=256M            # Allocates buffer pool size for InnoDB
-      - --binlog_expire_logs_seconds=1209600      # Sets binary log expiration to 14 days (2 weeks)
-      - --innodb-log-file-size=64M                # Sets InnoDB log file size to balance log retention and performance
-      - --innodb-log-files-in-group=2             # Uses two log files to balance recovery and disk I/O
-      - --innodb-doublewrite=0                    # Disables doublewrite buffer (reduces disk I/O; may increase data loss risk)
-      - --general_log=0                           # Disables general query log to reduce disk usage
-      - --slow_query_log=1                        # Enables slow query log for identifying performance issues
-      - --slow_query_log_file=/var/lib/mysql/slow.log # Logs slow queries for troubleshooting
-      - --long_query_time=2                       # Defines slow query threshold as 2 seconds
+      - --bind-address=127.0.0.1                  # Ограничивает доступ только локальным хостом для повышения безопасности
+      - --character_set_server=utf8mb4            # Устанавливает кодировку UTF-8 для полной поддержки Unicode
+      - --collation_server=utf8mb4_unicode_ci     # Определяет сопоставление для Unicode
+      - --host-cache-size=0                       # Отключает кэш хоста для предотвращения проблем с DNS
+      - --innodb-open-files=1024                  # Устанавливает лимит открытых файлов для InnoDB
+      - --innodb-buffer-pool-size=256M            # Выделяет размер буферного пула для InnoDB
+      - --binlog_expire_logs_seconds=1209600      # Устанавливает срок хранения бинарных логов в 14 дней (2 недели)
+      - --innodb-log-file-size=64M                # Устанавливает размер файла журнала InnoDB для баланса между хранением и производительностью
+      - --innodb-log-files-in-group=2             # Использует два файла журнала для баланса восстановления и дисковых операций
+      - --innodb-doublewrite=0                    # Отключает двойную запись (уменьшает операции ввода/вывода; может увеличить риск потери данных)
+      - --general_log=0                           # Отключает общий журнал запросов для уменьшения использования диска
+      - --slow_query_log=1                        # Включает журнал медленных запросов для выявления проблем производительности
+      - --slow_query_log_file=/var/lib/mysql/slow.log # Записывает медленные запросы для устранения неполадок
+      - --long_query_time=2                       # Определяет порог медленного запроса в 2 секунды
     volumes:
       - /var/lib/marzban/mysql:/var/lib/mysql
     healthcheck:
@@ -951,28 +936,28 @@ follow_marzban_logs() {
 
 status_command() {
     
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        echo -n "Status: "
-        colorized_echo red "Not Installed"
+        echo -n "Статус: "
+        colorized_echo red "Не установлен"
         exit 1
     fi
     
     detect_compose
     
     if ! is_marzban_up; then
-        echo -n "Status: "
-        colorized_echo blue "Down"
+        echo -n "Статус: "
+        colorized_echo blue "Остановлен"
         exit 1
     fi
     
-    echo -n "Status: "
-    colorized_echo green "Up"
+    echo -n "Статус: "
+    colorized_echo green "Работает"
     
     json=$($COMPOSE -f $COMPOSE_FILE ps -a --format=json)
     services=$(echo "$json" | jq -r 'if type == "array" then .[] else . end | .Service')
     states=$(echo "$json" | jq -r 'if type == "array" then .[] else . end | .State')
-    # Print out the service names and statuses
+    # Вывод имен сервисов и их статусов
     for i in $(seq 0 $(expr $(echo $services | wc -w) - 1)); do
         service=$(echo $services | cut -d' ' -f $(expr $i + 1))
         state=$(echo $states | cut -d' ' -f $(expr $i + 1))
@@ -985,34 +970,30 @@ status_command() {
     done
 }
 
-
 prompt_for_marzban_password() {
-    colorized_echo cyan "This password will be used to access the database and should be strong."
-    colorized_echo cyan "If you do not enter a custom password, a secure 20-character password will be generated automatically."
+    colorized_echo cyan "Этот пароль будет использоваться для доступа к базе данных и должен быть надежным."
+    colorized_echo cyan "Если вы не введете собственный пароль, будет автоматически сгенерирован безопасный 20-символьный пароль."
 
-    # Запрашиваем ввод пароля
-    read -p "Enter the password for the marzban user (or press Enter to generate a secure default password): " MYSQL_PASSWORD
+    read -p "Введите пароль для пользователя marzban (или нажмите Enter для генерации безопасного пароля по умолчанию): " MYSQL_PASSWORD
 
-    # Генерация 20-значного пароля, если пользователь оставил поле пустым
     if [ -z "$MYSQL_PASSWORD" ]; then
         MYSQL_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)
-        colorized_echo green "A secure password has been generated automatically."
+        colorized_echo green "Безопасный пароль был сгенерирован автоматически."
     fi
-    colorized_echo green "This password will be recorded in the .env file for future use."
+    colorized_echo green "Этот пароль будет сохранен в файле .env для дальнейшего использования."
 
-    # Пауза 3 секунды перед продолжением
     sleep 3
 }
 
 install_command() {
     check_running_as_root
 
-    # Default values
+    # Значения по умолчанию
     database_type="sqlite"
     marzban_version="latest"
     marzban_version_set="false"
 
-    # Parse options
+    # Разбор параметров
     while [[ $# -gt 0 ]]; do
         key="$1"
         case $key in
@@ -1022,7 +1003,7 @@ install_command() {
             ;;
             --dev)
                 if [[ "$marzban_version_set" == "true" ]]; then
-                    colorized_echo red "Error: Cannot use --dev and --version options simultaneously."
+                    colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
                 marzban_version="dev"
@@ -1031,7 +1012,7 @@ install_command() {
             ;;
             --version)
                 if [[ "$marzban_version_set" == "true" ]]; then
-                    colorized_echo red "Error: Cannot use --dev and --version options simultaneously."
+                    colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
                 marzban_version="$2"
@@ -1039,18 +1020,18 @@ install_command() {
                 shift 2
             ;;
             *)
-                echo "Unknown option: $1"
+                echo "Неизвестная опция: $1"
                 exit 1
             ;;
         esac
     done
 
-    # Check if marzban is already installed
+    # Проверка, установлен ли уже marzban
     if is_marzban_installed; then
-        colorized_echo red "Marzban is already installed at $APP_DIR"
-        read -p "Do you want to override the previous installation? (y/n) "
+        colorized_echo red "Marzban уже установлен в $APP_DIR"
+        read -p "Хотите переустановить предыдущую установку? (y/n) "
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            colorized_echo red "Aborted installation"
+            colorized_echo red "Установка прервана"
             exit 1
         fi
     fi
@@ -1069,35 +1050,37 @@ install_command() {
     fi
     detect_compose
     install_marzban_script
-    # Function to check if a version exists in the GitHub releases
+    
+    # Функция для проверки существования версии в релизах GitHub
     check_version_exists() {
         local version=$1
-        repo_url="https://api.github.com/repos/Gozargah/Marzban/releases"
+        repo_url="https://api.github.com/repos/SiberMix/vpn_seller/releases"
         if [ "$version" == "latest" ] || [ "$version" == "dev" ]; then
             return 0
         fi
         
-        # Fetch the release data from GitHub API
+        # Получение данных релиза из GitHub API
         response=$(curl -s "$repo_url")
         
-        # Check if the response contains the version tag
+        # Проверка содержит ли ответ тег версии
         if echo "$response" | jq -e ".[] | select(.tag_name == \"${version}\")" > /dev/null; then
             return 0
         else
             return 1
         fi
     }
-    # Check if the version is valid and exists
+    
+    # Проверка валидности версии
     if [[ "$marzban_version" == "latest" || "$marzban_version" == "dev" || "$marzban_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         if check_version_exists "$marzban_version"; then
             install_marzban "$marzban_version" "$database_type"
-            echo "Installing $marzban_version version"
+            echo "Установка версии $marzban_version"
         else
-            echo "Version $marzban_version does not exist. Please enter a valid version (e.g. v0.5.2)"
+            echo "Версия $marzban_version не существует. Пожалуйста, введите правильную версию (например, v0.5.2)"
             exit 1
         fi
     else
-        echo "Invalid version format. Please enter a valid version (e.g. v0.5.2)"
+        echo "Неверный формат версии. Пожалуйста, введите правильную версию (например, v0.5.2)"
         exit 1
     fi
     up_marzban
@@ -1106,7 +1089,7 @@ install_command() {
 
 install_yq() {
     if command -v yq &>/dev/null; then
-        colorized_echo green "yq is already installed."
+        colorized_echo green "yq уже установлен."
         return
     fi
 
@@ -1129,67 +1112,60 @@ install_yq() {
             yq_binary="yq_linux_386"
             ;;
         *)
-            colorized_echo red "Unsupported architecture: $ARCH"
+            colorized_echo red "Неподдерживаемая архитектура: $ARCH"
             exit 1
             ;;
     esac
 
     local yq_url="${base_url}/${yq_binary}"
-    colorized_echo blue "Downloading yq from ${yq_url}..."
+    colorized_echo blue "Загрузка yq из ${yq_url}..."
 
     if ! command -v curl &>/dev/null && ! command -v wget &>/dev/null; then
-        colorized_echo yellow "Neither curl nor wget is installed. Attempting to install curl."
+        colorized_echo yellow "Ни curl, ни wget не установлены. Попытка установить curl."
         install_package curl || {
-            colorized_echo red "Failed to install curl. Please install curl or wget manually."
+            colorized_echo red "Не удалось установить curl. Пожалуйста, установите curl или wget вручную."
             exit 1
         }
     fi
 
-
     if command -v curl &>/dev/null; then
         if curl -L "$yq_url" -o /usr/local/bin/yq; then
             chmod +x /usr/local/bin/yq
-            colorized_echo green "yq installed successfully!"
+            colorized_echo green "yq успешно установлен!"
         else
-            colorized_echo red "Failed to download yq using curl. Please check your internet connection."
+            colorized_echo red "Не удалось загрузить yq с помощью curl. Проверьте подключение к интернету."
             exit 1
         fi
     elif command -v wget &>/dev/null; then
         if wget -O /usr/local/bin/yq "$yq_url"; then
             chmod +x /usr/local/bin/yq
-            colorized_echo green "yq installed successfully!"
+            colorized_echo green "yq успешно установлен!"
         else
-            colorized_echo red "Failed to download yq using wget. Please check your internet connection."
+            colorized_echo red "Не удалось загрузить yq с помощью wget. Проверьте подключение к интернету."
             exit 1
         fi
     fi
-
 
     if ! echo "$PATH" | grep -q "/usr/local/bin"; then
         export PATH="/usr/local/bin:$PATH"
     fi
 
-
     hash -r
 
     if command -v yq &>/dev/null; then
-        colorized_echo green "yq is ready to use."
+        colorized_echo green "yq готов к использованию."
     elif [ -x "/usr/local/bin/yq" ]; then
-
-        colorized_echo yellow "yq is installed at /usr/local/bin/yq but not found in PATH."
-        colorized_echo yellow "You can add /usr/local/bin to your PATH environment variable."
+        colorized_echo yellow "yq установлен в /usr/local/bin/yq, но не найден в PATH."
+        colorized_echo yellow "Вы можете добавить /usr/local/bin в переменную окружения PATH."
     else
-        colorized_echo red "yq installation failed. Please try again or install manually."
+        colorized_echo red "Установка yq не удалась. Попробуйте снова или установите вручную."
         exit 1
     fi
 }
 
-
 down_marzban() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" down
 }
-
-
 
 show_marzban_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs
@@ -1203,7 +1179,6 @@ marzban_cli() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" exec -e CLI_PROG_NAME="marzban cli" marzban marzban-cli "$@"
 }
 
-
 is_marzban_up() {
     if [ -z "$($COMPOSE -f $COMPOSE_FILE ps -q -a)" ]; then
         return 1
@@ -1214,15 +1189,15 @@ is_marzban_up() {
 
 uninstall_command() {
     check_running_as_root
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
-    read -p "Do you really want to uninstall Marzban? (y/n) "
+    read -p "Вы действительно хотите удалить Marzban? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        colorized_echo red "Aborted"
+        colorized_echo red "Отменено"
         exit 1
     fi
     
@@ -1234,7 +1209,7 @@ uninstall_command() {
     uninstall_marzban
     uninstall_marzban_docker_images
     
-    read -p "Do you want to remove Marzban's data files too ($DATA_DIR)? (y/n) "
+    read -p "Хотите также удалить файлы данных Marzban ($DATA_DIR)? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         colorized_echo green "Marzban uninstalled successfully"
     else
@@ -1245,14 +1220,14 @@ uninstall_command() {
 
 uninstall_marzban_script() {
     if [ -f "/usr/local/bin/marzban" ]; then
-        colorized_echo yellow "Removing marzban script"
+        colorized_echo yellow "Удаление скрипта marzban"
         rm "/usr/local/bin/marzban"
     fi
 }
 
 uninstall_marzban() {
     if [ -d "$APP_DIR" ]; then
-        colorized_echo yellow "Removing directory: $APP_DIR"
+        colorized_echo yellow "Удаление директории: $APP_DIR"
         rm -r "$APP_DIR"
     fi
 }
@@ -1261,10 +1236,10 @@ uninstall_marzban_docker_images() {
     images=$(docker images | grep marzban | awk '{print $3}')
     
     if [ -n "$images" ]; then
-        colorized_echo yellow "Removing Docker images of Marzban"
+        colorized_echo yellow "Удаление Docker образов Marzban"
         for image in $images; do
             if docker rmi "$image" >/dev/null 2>&1; then
-                colorized_echo yellow "Image $image removed"
+                colorized_echo yellow "Образ $image удален"
             fi
         done
     fi
@@ -1272,18 +1247,18 @@ uninstall_marzban_docker_images() {
 
 uninstall_marzban_data_files() {
     if [ -d "$DATA_DIR" ]; then
-        colorized_echo yellow "Removing directory: $DATA_DIR"
+        colorized_echo yellow "Удаление директории: $DATA_DIR"
         rm -r "$DATA_DIR"
     fi
 }
 
 restart_command() {
     help() {
-        colorized_echo red "Usage: marzban restart [options]"
+        colorized_echo red "Использование: marzban restart [опции]"
         echo
-        echo "OPTIONS:"
-        echo "  -h, --help        display this help message"
-        echo "  -n, --no-logs     do not follow logs after starting"
+        echo "ОПЦИИ:"
+        echo "  -h, --help        показать это сообщение справки"
+        echo "  -n, --no-logs     не следить за логами после запуска"
     }
     
     local no_logs=false
@@ -1297,7 +1272,7 @@ restart_command() {
                 exit 0
             ;;
             *)
-                echo "Error: Invalid option: $1" >&2
+                echo "Ошибка: Неверная опция: $1" >&2
                 help
                 exit 0
             ;;
@@ -1305,9 +1280,9 @@ restart_command() {
         shift
     done
     
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
@@ -1318,15 +1293,16 @@ restart_command() {
     if [ "$no_logs" = false ]; then
         follow_marzban_logs
     fi
-    colorized_echo green "Marzban successfully restarted!"
+    colorized_echo green "Marzban успешно перезапущен!"
 }
+
 logs_command() {
     help() {
-        colorized_echo red "Usage: marzban logs [options]"
+        colorized_echo red "Использование: marzban logs [опции]"
         echo ""
-        echo "OPTIONS:"
-        echo "  -h, --help        display this help message"
-        echo "  -n, --no-follow   do not show follow logs"
+        echo "ОПЦИИ:"
+        echo "  -h, --help        показать это сообщение справки"
+        echo "  -n, --no-follow   не следить за логами"
     }
     
     local no_follow=false
@@ -1340,7 +1316,7 @@ logs_command() {
                 exit 0
             ;;
             *)
-                echo "Error: Invalid option: $1" >&2
+                echo "Ошибка: Неверная опция: $1" >&2
                 help
                 exit 0
             ;;
@@ -1348,16 +1324,16 @@ logs_command() {
         shift
     done
     
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
     detect_compose
     
     if ! is_marzban_up; then
-        colorized_echo red "Marzban is not up."
+        colorized_echo red "Marzban не запущен."
         exit 1
     fi
     
@@ -1370,16 +1346,16 @@ logs_command() {
 
 down_command() {
     
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
     detect_compose
     
     if ! is_marzban_up; then
-        colorized_echo red "Marzban's already down"
+        colorized_echo red "Marzban уже остановлен"
         exit 1
     fi
     
@@ -1387,16 +1363,16 @@ down_command() {
 }
 
 cli_command() {
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
     detect_compose
     
     if ! is_marzban_up; then
-        colorized_echo red "Marzban is not up."
+        colorized_echo red "Marzban не запущен."
         exit 1
     fi
     
@@ -1405,11 +1381,11 @@ cli_command() {
 
 up_command() {
     help() {
-        colorized_echo red "Usage: marzban up [options]"
+        colorized_echo red "Использование: marzban up [опции]"
         echo ""
-        echo "OPTIONS:"
-        echo "  -h, --help        display this help message"
-        echo "  -n, --no-logs     do not follow logs after starting"
+        echo "ОПЦИИ:"
+        echo "  -h, --help        показать это сообщение справки"
+        echo "  -n, --no-logs     не следить за логами после запуска"
     }
     
     local no_logs=false
@@ -1423,7 +1399,7 @@ up_command() {
                 exit 0
             ;;
             *)
-                echo "Error: Invalid option: $1" >&2
+                echo "Ошибка: Неверная опция: $1" >&2
                 help
                 exit 0
             ;;
@@ -1431,16 +1407,16 @@ up_command() {
         shift
     done
     
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
     detect_compose
     
     if is_marzban_up; then
-        colorized_echo red "Marzban's already up"
+        colorized_echo red "Marzban уже запущен"
         exit 1
     fi
     
@@ -1452,31 +1428,31 @@ up_command() {
 
 update_command() {
     check_running_as_root
-    # Check if marzban is installed
+    # Проверка установлен ли marzban
     if ! is_marzban_installed; then
-        colorized_echo red "Marzban's not installed!"
+        colorized_echo red "Marzban не установлен!"
         exit 1
     fi
     
     detect_compose
     
     update_marzban_script
-    colorized_echo blue "Pulling latest version"
+    colorized_echo blue "Загрузка последней версии"
     update_marzban
     
-    colorized_echo blue "Restarting Marzban's services"
+    colorized_echo blue "Перезапуск служб Marzban"
     down_marzban
     up_marzban
     
-    colorized_echo blue "Marzban updated successfully"
+    colorized_echo blue "Marzban успешно обновлен"
 }
 
 update_marzban_script() {
-    FETCH_REPO="Gozargah/Marzban-scripts"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/marzban.sh"
-    colorized_echo blue "Updating marzban script"
+    FETCH_REPO="SiberMix/vpn_seller"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/Marzban-scripts-master/marzban.sh"
+    colorized_echo blue "Обновление скрипта marzban"
     curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/marzban
-    colorized_echo green "marzban script updated successfully"
+    colorized_echo green "Скрипт marzban успешно обновлен"
 }
 
 update_marzban() {
@@ -1497,14 +1473,13 @@ check_editor() {
     fi
 }
 
-
 edit_command() {
     detect_os
     check_editor
     if [ -f "$COMPOSE_FILE" ]; then
         $EDITOR "$COMPOSE_FILE"
     else
-        colorized_echo red "Compose file not found at $COMPOSE_FILE"
+        colorized_echo red "Файл compose не найден в $COMPOSE_FILE"
         exit 1
     fi
 }
@@ -1515,7 +1490,7 @@ edit_env_command() {
     if [ -f "$ENV_FILE" ]; then
         $EDITOR "$ENV_FILE"
     else
-        colorized_echo red "Environment file not found at $ENV_FILE"
+        colorized_echo red "Файл окружения не найден в $ENV_FILE"
         exit 1
     fi
 }
@@ -1523,35 +1498,35 @@ edit_env_command() {
 usage() {
     local script_name="${0##*/}"
     colorized_echo blue "=============================="
-    colorized_echo magenta "           Marzban Help"
+    colorized_echo magenta "           Справка Marzban"
     colorized_echo blue "=============================="
-    colorized_echo cyan "Usage:"
-    echo "  ${script_name} [command]"
+    colorized_echo cyan "Использование:"
+    echo "  ${script_name} [команда]"
     echo
 
-    colorized_echo cyan "Commands:"
-    colorized_echo yellow "  up              $(tput sgr0)– Start services"
-    colorized_echo yellow "  down            $(tput sgr0)– Stop services"
-    colorized_echo yellow "  restart         $(tput sgr0)– Restart services"
-    colorized_echo yellow "  status          $(tput sgr0)– Show status"
-    colorized_echo yellow "  logs            $(tput sgr0)– Show logs"
-    colorized_echo yellow "  cli             $(tput sgr0)– Marzban CLI"
-    colorized_echo yellow "  install         $(tput sgr0)– Install Marzban"
-    colorized_echo yellow "  update          $(tput sgr0)– Update to latest version"
-    colorized_echo yellow "  uninstall       $(tput sgr0)– Uninstall Marzban"
-    colorized_echo yellow "  install-script  $(tput sgr0)– Install Marzban script"
-    colorized_echo yellow "  backup          $(tput sgr0)– Manual backup launch"
-    colorized_echo yellow "  backup-service  $(tput sgr0)– Marzban Backupservice to backup to TG, and a new job in crontab"
-    colorized_echo yellow "  core-update     $(tput sgr0)– Update/Change Xray core"
-    colorized_echo yellow "  edit            $(tput sgr0)– Edit docker-compose.yml (via nano or vi editor)"
-    colorized_echo yellow "  edit-env        $(tput sgr0)– Edit environment file (via nano or vi editor)"
-    colorized_echo yellow "  help            $(tput sgr0)– Show this help message"
+    colorized_echo cyan "Команды:"
+    colorized_echo yellow "  up              $(tput sgr0)– Запуск служб"
+    colorized_echo yellow "  down            $(tput sgr0)– Остановка служб"
+    colorized_echo yellow "  restart         $(tput sgr0)– Перезапуск служб"
+    colorized_echo yellow "  status          $(tput sgr0)– Показать статус"
+    colorized_echo yellow "  logs            $(tput sgr0)– Показать логи"
+    colorized_echo yellow "  cli             $(tput sgr0)– Интерфейс командной строки Marzban"
+    colorized_echo yellow "  install         $(tput sgr0)– Установить Marzban"
+    colorized_echo yellow "  update          $(tput sgr0)– Обновить до последней версии"
+    colorized_echo yellow "  uninstall       $(tput sgr0)– Удалить Marzban"
+    colorized_echo yellow "  install-script  $(tput sgr0)– Установить скрипт Marzban"
+    colorized_echo yellow "  backup          $(tput sgr0)– Запуск ручного резервного копирования"
+    colorized_echo yellow "  backup-service  $(tput sgr0)– Сервис резервного копирования Marzban в Telegram и новая задача в crontab"
+    colorized_echo yellow "  core-update     $(tput sgr0)– Обновить/Изменить ядро Xray"
+    colorized_echo yellow "  edit            $(tput sgr0)– Редактировать docker-compose.yml (через редактор nano или vi)"
+    colorized_echo yellow "  edit-env        $(tput sgr0)– Редактировать файл окружения (через редактор nano или vi)"
+    colorized_echo yellow "  help            $(tput sgr0)– Показать это сообщение справки"
     
     
     echo
-    colorized_echo cyan "Directories:"
-    colorized_echo magenta "  App directory: $APP_DIR"
-    colorized_echo magenta "  Data directory: $DATA_DIR"
+    colorized_echo cyan "Директории:"
+    colorized_echo magenta "  Директория приложения: $APP_DIR"
+    colorized_echo magenta "  Директория данных: $DATA_DIR"
     colorized_echo blue "================================"
     echo
 }

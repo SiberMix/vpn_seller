@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Download Xray latest
+# Загрузка последней версии Xray
 
 RELEASE_TAG="latest"
 
@@ -9,9 +9,9 @@ if [[ "$1" ]]; then
 fi
 
 check_if_running_as_root() {
-    # If you want to run as another user, please modify $EUID to be owned by this user
+    # Если вы хотите запустить от имени другого пользователя, измените $EUID на ID этого пользователя
     if [[ "$EUID" -ne '0' ]]; then
-        echo "error: You must run this script as root!"
+        echo "ошибка: Вы должны запустить этот скрипт от имени root!"
         exit 1
     fi
 }
@@ -65,12 +65,12 @@ identify_the_operating_system_and_architecture() {
                 ARCH='s390x'
             ;;
             *)
-                echo "error: The architecture is not supported."
+                echo "ошибка: Эта архитектура не поддерживается."
                 exit 1
             ;;
         esac
     else
-        echo "error: This operating system is not supported."
+        echo "ошибка: Эта операционная система не поддерживается."
         exit 1
     fi
 }
@@ -82,21 +82,21 @@ download_xray() {
         DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/$RELEASE_TAG/Xray-linux-$ARCH.zip"
     fi
     
-    echo "Downloading Xray archive: $DOWNLOAD_LINK"
+    echo "Загрузка архива Xray: $DOWNLOAD_LINK"
     if ! curl -RL -H 'Cache-Control: no-cache' -o "$ZIP_FILE" "$DOWNLOAD_LINK"; then
-        echo 'error: Download failed! Please check your network or try again.'
+        echo 'ошибка: Загрузка не удалась! Пожалуйста, проверьте ваше подключение к сети или попробуйте снова.'
         return 1
     fi
 }
 
 extract_xray() {
     if ! unzip -q "$ZIP_FILE" -d "$TMP_DIRECTORY"; then
-        echo 'error: Xray decompression failed.'
+        echo 'ошибка: Распаковка Xray не удалась.'
         "rm" -rf "$TMP_DIRECTORY"
-        echo "removed: $TMP_DIRECTORY"
+        echo "удалено: $TMP_DIRECTORY"
         exit 1
     fi
-    echo "Extracted Xray archive to $TMP_DIRECTORY"
+    echo "Архив Xray распакован в $TMP_DIRECTORY"
 }
 
 place_xray() {
@@ -104,7 +104,7 @@ place_xray() {
     install -d "/usr/local/share/xray/"
     install -m 644 "${TMP_DIRECTORY}/geoip.dat" "/usr/local/share/xray/geoip.dat"
     install -m 644 "${TMP_DIRECTORY}/geosite.dat" "/usr/local/share/xray/geosite.dat"
-    echo "Xray files installed"
+    echo "Файлы Xray установлены"
 }
 
 check_if_running_as_root
