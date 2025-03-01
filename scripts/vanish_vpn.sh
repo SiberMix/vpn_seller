@@ -121,15 +121,15 @@ detect_compose() {
     fi
 }
 
-install_vanish_vpn_script() {
+install_vanish_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish_vpn.sh"
-    colorized_echo blue "Установка скрипта vanish_vpn"
-    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish_vpn
-    colorized_echo green "Скрипт vanish_vpn успешно установлен"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish.sh"
+    colorized_echo blue "Установка скрипта vanish"
+    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish
+    colorized_echo green "Скрипт vanish успешно установлен"
 }
 
-is_vanish_vpn_installed() {
+is_vanish_installed() {
     if [ -d $APP_DIR ]; then
         return 0
     else
@@ -230,7 +230,7 @@ send_backup_to_telegram() {
     fi
 
     local backup_size=$(du -m "$backup_path" | cut -f1)
-    local split_dir="/tmp/vanish_vpn_backup_split"
+    local split_dir="/tmp/vanish_backup_split"
     local is_single_file=true
 
     mkdir -p "$split_dir"
@@ -439,7 +439,7 @@ add_cron_job() {
 
     crontab -l 2>/dev/null > "$temp_cron" || true
     grep -v "$command" "$temp_cron" > "${temp_cron}.tmp" && mv "${temp_cron}.tmp" "$temp_cron"
-    echo "$schedule $command # vanish_vpn-backup-service" >> "$temp_cron"
+    echo "$schedule $command # vanish-backup-service" >> "$temp_cron"
     
     if crontab "$temp_cron"; then
         colorized_echo green "Задача Cron успешно добавлена."
@@ -461,7 +461,7 @@ remove_backup_service() {
     local temp_cron=$(mktemp)
     crontab -l 2>/dev/null > "$temp_cron"
 
-    sed -i '/# vanish_vpn-backup-service/d' "$temp_cron"
+    sed -i '/# vanish-backup-service/d' "$temp_cron"
 
     if crontab "$temp_cron"; then
         colorized_echo green "Задача сервиса резервного копирования удалена из crontab."
@@ -476,11 +476,11 @@ remove_backup_service() {
 
 backup_command() {
     local backup_dir="$APP_DIR/backup"
-    local temp_dir="/tmp/vanish_vpn_backup"
+    local temp_dir="/tmp/vanish_backup"
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local backup_file="$backup_dir/backup_$timestamp.tar.gz"
     local error_messages=()
-    local log_file="/var/log/vanish_vpn_backup_error.log"
+    local log_file="/var/log/vanish_backup_error.log"
     > "$log_file"
     echo "Лог резервного копирования - $(date)" > "$log_file"
 
@@ -558,7 +558,7 @@ backup_command() {
 
     cp "$APP_DIR/.env" "$temp_dir/" 2>>"$log_file"
     cp "$APP_DIR/docker-compose.yml" "$temp_dir/" 2>>"$log_file"
-    rsync -av --exclude 'xray-core' --exclude 'mysql' "$DATA_DIR/" "$temp_dir/vanish_vpn_data/" >>"$log_file" 2>&1
+    rsync -av --exclude 'xray-core' --exclude 'mysql' "$DATA_DIR/" "$temp_dir/vanish_data/" >>"$log_file" 2>&1
 
     if ! tar -czf "$backup_file" -C "$temp_dir" .; then
         error_messages+=("Не удалось создать архив резервной копии.")
@@ -664,14 +664,14 @@ get_xray_core() {
     rm "${xray_filename}"
 }
 
-# Функция обновления основного ядра vanish_vpn
+# Функция обновления основного ядра vanish
 update_core_command() {
     check_running_as_root
     get_xray_core
-    # Изменение ядра vanish_vpn
+    # Изменение ядра vanish
     xray_executable_path="XRAY_EXECUTABLE_PATH=\"var/lib/vanish/xray-core/xray\""
     
-    echo "Изменение ядра vanish_vpn..."
+    echo "Изменение ядра vanish..."
     # Проверка существования строки XRAY_EXECUTABLE_PATH в файле .env
     if ! grep -q "^XRAY_EXECUTABLE_PATH=" "$ENV_FILE"; then
         # Если строка не существует, добавляем её
@@ -681,18 +681,18 @@ update_core_command() {
         sed -i "s~^XRAY_EXECUTABLE_PATH=.*~${xray_executable_path}~" "$ENV_FILE"
     fi
     
-    # Перезапуск vanish_vpn
-    colorized_echo red "Перезапуск vanish_vpn..."
+    # Перезапуск vanish
+    colorized_echo red "Перезапуск vanish..."
     if restart_command -n >/dev/null 2>&1; then
-        colorized_echo green "vanish_vpn успешно перезапущен!"
+        colorized_echo green "vanish успешно перезапущен!"
     else
-        colorized_echo red "Ошибка перезапуска vanish_vpn!"
+        colorized_echo red "Ошибка перезапуска vanish!"
     fi
     colorized_echo blue "Установка версии Xray-core $selected_version завершена."
 }
 
-install_vanish_vpn() {
-    local vanish_vpn_version=$1
+install_vanish() {
+    local vanish_version=$1
     local database_type=$2
     # Получение релизов
     FILES_URL_PREFIX="https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend"
@@ -713,10 +713,10 @@ install_vanish_vpn() {
     curl -sL "$FILES_URL_PREFIX/Dockerfile" -o "$APP_DIR/Dockerfile"
 
     # Install requested version
-    if [ "$vanish_vpn_version" == "latest" ]; then
-            yq -i '.services.vanish_vpn.image = "sibermixru/vpn_queue:latest"' "$docker_file_path"
+    if [ "$vanish_version" == "latest" ]; then
+            yq -i '.services.vanish.image = "sibermixru/vpn_queue:latest"' "$docker_file_path"
     fi
-    echo "Installing $vanish_vpn_version version"
+    echo "Installing $vanish_version version"
     colorized_echo green "File saved in $APP_DIR/docker-compose.yml"
 
 
@@ -739,21 +739,21 @@ install_vanish_vpn() {
     curl -sL "https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend/xray_config.json" -o "$DATA_DIR/xray_config.json"
     colorized_echo green "File saved in $DATA_DIR/xray_config.json"
     
-    colorized_echo green "vanish_vpn's files downloaded successfully"
+    colorized_echo green "vanish's files downloaded successfully"
 }
 
-up_vanish_vpn() {
+up_vanish() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" up -d --remove-orphans
 }
 
-follow_vanish_vpn_logs() {
+follow_vanish_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs -f
 }
 
 status_command() {
     
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
         echo -n "Статус: "
         colorized_echo red "Не установлен"
         exit 1
@@ -761,7 +761,7 @@ status_command() {
     
     detect_compose
     
-    if ! is_vanish_vpn_up; then
+    if ! is_vanish_up; then
         echo -n "Статус: "
         colorized_echo blue "Остановлен"
         exit 1
@@ -786,11 +786,11 @@ status_command() {
     done
 }
 
-prompt_for_vanish_vpn_password() {
+prompt_for_vanish_password() {
     colorized_echo cyan "Этот пароль будет использоваться для доступа к базе данных и должен быть надежным."
     colorized_echo cyan "Если вы не введете собственный пароль, будет автоматически сгенерирован безопасный 20-символьный пароль."
 
-    read -p "Введите пароль для пользователя vanish_vpn (или нажмите Enter для генерации безопасного пароля по умолчанию): " MYSQL_PASSWORD
+    read -p "Введите пароль для пользователя vanish (или нажмите Enter для генерации безопасного пароля по умолчанию): " MYSQL_PASSWORD
 
     if [ -z "$MYSQL_PASSWORD" ]; then
         MYSQL_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)
@@ -806,8 +806,8 @@ install_command() {
 
     # Значения по умолчанию
     database_type="sqlite"
-    vanish_vpn_version="latest"
-    vanish_vpn_version_set="false"
+    vanish_version="latest"
+    vanish_version_set="false"
 
     # Разбор параметров
     while [[ $# -gt 0 ]]; do
@@ -818,21 +818,21 @@ install_command() {
                 shift 2
             ;;
             --dev)
-                if [[ "$vanish_vpn_version_set" == "true" ]]; then
+                if [[ "$vanish_version_set" == "true" ]]; then
                     colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
-                vanish_vpn_version="dev"
-                vanish_vpn_version_set="true"
+                vanish_version="dev"
+                vanish_version_set="true"
                 shift
             ;;
             --version)
-                if [[ "$vanish_vpn_version_set" == "true" ]]; then
+                if [[ "$vanish_version_set" == "true" ]]; then
                     colorized_echo red "Ошибка: Нельзя использовать опции --dev и --version одновременно."
                     exit 1
                 fi
-                vanish_vpn_version="$2"
-                vanish_vpn_version_set="true"
+                vanish_version="$2"
+                vanish_version_set="true"
                 shift 2
             ;;
             *)
@@ -842,9 +842,9 @@ install_command() {
         esac
     done
 
-    # Проверка, установлен ли уже vanish_vpn
-    if is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn уже установлен в $APP_DIR"
+    # Проверка, установлен ли уже vanish
+    if is_vanish_installed; then
+        colorized_echo red "vanish уже установлен в $APP_DIR"
         read -p "Хотите переустановить предыдущую установку? (y/n) "
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             colorized_echo red "Установка прервана"
@@ -865,7 +865,7 @@ install_command() {
         install_yq
     fi
     detect_compose
-    install_vanish_vpn_script
+    install_vanish_script
     
     # Функция для проверки существования версии в релизах GitHub
     check_version_exists() {
@@ -887,20 +887,20 @@ install_command() {
     }
     
     # Проверка валидности версии
-    if [[ "$vanish_vpn_version" == "latest" || "$vanish_vpn_version" == "dev" || "$vanish_vpn_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        if check_version_exists "$vanish_vpn_version"; then
-            install_vanish_vpn "$vanish_vpn_version" "$database_type"
-            echo "Установка версии $vanish_vpn_version"
+    if [[ "$vanish_version" == "latest" || "$vanish_version" == "dev" || "$vanish_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        if check_version_exists "$vanish_version"; then
+            install_vanish "$vanish_version" "$database_type"
+            echo "Установка версии $vanish_version"
         else
-            echo "Версия $vanish_vpn_version не существует. Пожалуйста, введите правильную версию (например, v0.5.2)"
+            echo "Версия $vanish_version не существует. Пожалуйста, введите правильную версию (например, v0.5.2)"
             exit 1
         fi
     else
         echo "Неверный формат версии. Пожалуйста, введите правильную версию (например, v0.5.2)"
         exit 1
     fi
-    up_vanish_vpn
-    follow_vanish_vpn_logs
+    up_vanish
+    follow_vanish_logs
 }
 
 install_yq() {
@@ -979,23 +979,23 @@ install_yq() {
     fi
 }
 
-down_vanish_vpn() {
+down_vanish() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" down
 }
 
-show_vanish_vpn_logs() {
+show_vanish_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs
 }
 
-follow_vanish_vpn_logs() {
+follow_vanish_logs() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" logs -f
 }
 
-vanish_vpn_cli() {
-    $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" exec -e CLI_PROG_NAME="vanish_vpn cli" vanish_vpn vanish_vpn-cli "$@"
+vanish_cli() {
+    $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" exec -e CLI_PROG_NAME="vanish cli" vanish vanish-cli "$@"
 }
 
-is_vanish_vpn_up() {
+is_vanish_up() {
     if [ -z "$($COMPOSE -f $COMPOSE_FILE ps -q -a)" ]; then
         return 1
     else
@@ -1005,54 +1005,54 @@ is_vanish_vpn_up() {
 
 uninstall_command() {
     check_running_as_root
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
-    read -p "Вы действительно хотите удалить vanish_vpn? (y/n) "
+    read -p "Вы действительно хотите удалить vanish? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         colorized_echo red "Отменено"
         exit 1
     fi
     
     detect_compose
-    if is_vanish_vpn_up; then
-        down_vanish_vpn
+    if is_vanish_up; then
+        down_vanish
     fi
-    uninstall_vanish_vpn_script
-    uninstall_vanish_vpn
-    uninstall_vanish_vpn_docker_images
+    uninstall_vanish_script
+    uninstall_vanish
+    uninstall_vanish_docker_images
     
-    read -p "Хотите также удалить файлы данных vanish_vpn ($DATA_DIR)? (y/n) "
+    read -p "Хотите также удалить файлы данных vanish ($DATA_DIR)? (y/n) "
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        colorized_echo green "vanish_vpn uninstalled successfully"
+        colorized_echo green "vanish uninstalled successfully"
     else
-        uninstall_vanish_vpn_data_files
-        colorized_echo green "vanish_vpn uninstalled successfully"
+        uninstall_vanish_data_files
+        colorized_echo green "vanish uninstalled successfully"
     fi
 }
 
-uninstall_vanish_vpn_script() {
-    if [ -f "/usr/local/bin/vanish_vpn" ]; then
-        colorized_echo yellow "Удаление скрипта vanish_vpn"
-        rm "/usr/local/bin/vanish_vpn"
+uninstall_vanish_script() {
+    if [ -f "/usr/local/bin/vanish" ]; then
+        colorized_echo yellow "Удаление скрипта vanish"
+        rm "/usr/local/bin/vanish"
     fi
 }
 
-uninstall_vanish_vpn() {
+uninstall_vanish() {
     if [ -d "$APP_DIR" ]; then
         colorized_echo yellow "Удаление директории: $APP_DIR"
         rm -r "$APP_DIR"
     fi
 }
 
-uninstall_vanish_vpn_docker_images() {
-    images=$(docker images | grep vanish_vpn | awk '{print $3}')
+uninstall_vanish_docker_images() {
+    images=$(docker images | grep vanish | awk '{print $3}')
     
     if [ -n "$images" ]; then
-        colorized_echo yellow "Удаление Docker образов vanish_vpn"
+        colorized_echo yellow "Удаление Docker образов vanish"
         for image in $images; do
             if docker rmi "$image" >/dev/null 2>&1; then
                 colorized_echo yellow "Образ $image удален"
@@ -1061,7 +1061,7 @@ uninstall_vanish_vpn_docker_images() {
     fi
 }
 
-uninstall_vanish_vpn_data_files() {
+uninstall_vanish_data_files() {
     if [ -d "$DATA_DIR" ]; then
         colorized_echo yellow "Удаление директории: $DATA_DIR"
         rm -r "$DATA_DIR"
@@ -1070,7 +1070,7 @@ uninstall_vanish_vpn_data_files() {
 
 restart_command() {
     help() {
-        colorized_echo red "Использование: vanish_vpn restart [опции]"
+        colorized_echo red "Использование: vanish restart [опции]"
         echo
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1096,25 +1096,25 @@ restart_command() {
         shift
     done
     
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    down_vanish_vpn
-    up_vanish_vpn
+    down_vanish
+    up_vanish
     if [ "$no_logs" = false ]; then
-        follow_vanish_vpn_logs
+        follow_vanish_logs
     fi
-    colorized_echo green "vanish_vpn успешно перезапущен!"
+    colorized_echo green "vanish успешно перезапущен!"
 }
 
 logs_command() {
     help() {
-        colorized_echo red "Использование: vanish_vpn logs [опции]"
+        colorized_echo red "Использование: vanish logs [опции]"
         echo ""
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1140,64 +1140,64 @@ logs_command() {
         shift
     done
     
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_vanish_vpn_up; then
-        colorized_echo red "vanish_vpn не запущен."
+    if ! is_vanish_up; then
+        colorized_echo red "vanish не запущен."
         exit 1
     fi
     
     if [ "$no_follow" = true ]; then
-        show_vanish_vpn_logs
+        show_vanish_logs
     else
-        follow_vanish_vpn_logs
+        follow_vanish_logs
     fi
 }
 
 down_command() {
     
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_vanish_vpn_up; then
-        colorized_echo red "vanish_vpn уже остановлен"
+    if ! is_vanish_up; then
+        colorized_echo red "vanish уже остановлен"
         exit 1
     fi
     
-    down_vanish_vpn
+    down_vanish
 }
 
 cli_command() {
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if ! is_vanish_vpn_up; then
-        colorized_echo red "vanish_vpn не запущен."
+    if ! is_vanish_up; then
+        colorized_echo red "vanish не запущен."
         exit 1
     fi
     
-    vanish_vpn_cli "$@"
+    vanish_cli "$@"
 }
 
 up_command() {
     help() {
-        colorized_echo red "Использование: vanish_vpn up [опции]"
+        colorized_echo red "Использование: vanish up [опции]"
         echo ""
         echo "ОПЦИИ:"
         echo "  -h, --help        показать это сообщение справки"
@@ -1223,55 +1223,55 @@ up_command() {
         shift
     done
     
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    if is_vanish_vpn_up; then
-        colorized_echo red "vanish_vpn уже запущен"
+    if is_vanish_up; then
+        colorized_echo red "vanish уже запущен"
         exit 1
     fi
     
-    up_vanish_vpn
+    up_vanish
     if [ "$no_logs" = false ]; then
-        follow_vanish_vpn_logs
+        follow_vanish_logs
     fi
 }
 
 update_command() {
     check_running_as_root
-    # Проверка установлен ли vanish_vpn
-    if ! is_vanish_vpn_installed; then
-        colorized_echo red "vanish_vpn не установлен!"
+    # Проверка установлен ли vanish
+    if ! is_vanish_installed; then
+        colorized_echo red "vanish не установлен!"
         exit 1
     fi
     
     detect_compose
     
-    update_vanish_vpn_script
+    update_vanish_script
     colorized_echo blue "Загрузка последней версии"
-    update_vanish_vpn
+    update_vanish
     
-    colorized_echo blue "Перезапуск служб vanish_vpn"
-    down_vanish_vpn
-    up_vanish_vpn
+    colorized_echo blue "Перезапуск служб vanish"
+    down_vanish
+    up_vanish
     
-    colorized_echo blue "vanish_vpn успешно обновлен"
+    colorized_echo blue "vanish успешно обновлен"
 }
 
-update_vanish_vpn_script() {
+update_vanish_script() {
     FETCH_REPO="SiberMix/vpn_seller"
-    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish_vpn.sh"
-    colorized_echo blue "Обновление скрипта vanish_vpn"
-    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish_vpn
-    colorized_echo green "Скрипт vanish_vpn успешно обновлен"
+    SCRIPT_URL="https://github.com/$FETCH_REPO/raw/master/scripts/vanish.sh"
+    colorized_echo blue "Обновление скрипта vanish"
+    curl -sSL $SCRIPT_URL | install -m 755 /dev/stdin /usr/local/bin/vanish
+    colorized_echo green "Скрипт vanish успешно обновлен"
 }
 
-update_vanish_vpn() {
+update_vanish() {
     $COMPOSE -f $COMPOSE_FILE -p "$APP_NAME" pull
 }
 
@@ -1314,7 +1314,7 @@ edit_env_command() {
 usage() {
     local script_name="${0##*/}"
     colorized_echo blue "=============================="
-    colorized_echo magenta "           Справка vanish_vpn"
+    colorized_echo magenta "           Справка vanish"
     colorized_echo blue "=============================="
     colorized_echo cyan "Использование:"
     echo "  ${script_name} [команда]"
@@ -1326,13 +1326,13 @@ usage() {
     colorized_echo yellow "  restart         $(tput sgr0)– Перезапуск служб"
     colorized_echo yellow "  status          $(tput sgr0)– Показать статус"
     colorized_echo yellow "  logs            $(tput sgr0)– Показать логи"
-    colorized_echo yellow "  cli             $(tput sgr0)– Интерфейс командной строки vanish_vpn"
-    colorized_echo yellow "  install         $(tput sgr0)– Установить vanish_vpn"
+    colorized_echo yellow "  cli             $(tput sgr0)– Интерфейс командной строки vanish"
+    colorized_echo yellow "  install         $(tput sgr0)– Установить vanish"
     colorized_echo yellow "  update          $(tput sgr0)– Обновить до последней версии"
-    colorized_echo yellow "  uninstall       $(tput sgr0)– Удалить vanish_vpn"
-    colorized_echo yellow "  install-script  $(tput sgr0)– Установить скрипт vanish_vpn"
+    colorized_echo yellow "  uninstall       $(tput sgr0)– Удалить vanish"
+    colorized_echo yellow "  install-script  $(tput sgr0)– Установить скрипт vanish"
     colorized_echo yellow "  backup          $(tput sgr0)– Запуск ручного резервного копирования"
-    colorized_echo yellow "  backup-service  $(tput sgr0)– Сервис резервного копирования vanish_vpn в Telegram и новая задача в crontab"
+    colorized_echo yellow "  backup-service  $(tput sgr0)– Сервис резервного копирования vanish в Telegram и новая задача в crontab"
     colorized_echo yellow "  core-update     $(tput sgr0)– Обновить/Изменить ядро Xray"
     colorized_echo yellow "  edit            $(tput sgr0)– Редактировать docker-compose.yml (через редактор nano или vi)"
     colorized_echo yellow "  edit-env        $(tput sgr0)– Редактировать файл окружения (через редактор nano или vi)"
@@ -1371,7 +1371,7 @@ case "$1" in
     uninstall)
         shift; uninstall_command "$@";;
     install-script)
-        shift; install_vanish_vpn_script "$@";;
+        shift; install_vanish_script "$@";;
     core-update)
         shift; update_core_command "$@";;
     edit)
