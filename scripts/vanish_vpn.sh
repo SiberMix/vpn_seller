@@ -3,7 +3,7 @@ set -e
 
 INSTALL_DIR="/opt"
 if [ -z "$APP_NAME" ]; then
-    APP_NAME="vanish_vpn"
+    APP_NAME="vanish"
 fi
 APP_DIR="$INSTALL_DIR/$APP_NAME"
 DATA_DIR="/var/lib/$APP_NAME"
@@ -736,7 +736,7 @@ install_vanish_vpn() {
     colorized_echo green "File saved in $APP_DIR/.env"
 
     colorized_echo blue "Fetching xray config file"
-    curl -sL "$FILES_URL_PREFIX/xray_config.json" -o "$DATA_DIR/xray_config.json"
+    curl -sL "https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend/xray_config.json" -o "$DATA_DIR/xray_config.json"
     colorized_echo green "File saved in $DATA_DIR/xray_config.json"
     
     colorized_echo green "vanish_vpn's files downloaded successfully"
