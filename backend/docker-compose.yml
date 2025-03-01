@@ -1,6 +1,8 @@
 services:
   vanish:
-    image: sibermixru/vpn_queue:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     env_file: .env
     network_mode: host
