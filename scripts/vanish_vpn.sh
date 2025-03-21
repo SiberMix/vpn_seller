@@ -720,7 +720,6 @@ install_vanish() {
 
     sed -i 's/^# \(XRAY_JSON = .*\)$/\1/' "$APP_DIR/.env"
     sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
-    sed -i 's~\(XRAY_JSON = \).*~\1"var/lib/vanish/xray_config.json"~' "$APP_DIR/.env"
     sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:///var/lib/vanish/db.sqlite3"~' "$APP_DIR/.env"
 
 
@@ -729,10 +728,6 @@ install_vanish() {
 
         
     colorized_echo green "File saved in $APP_DIR/.env"
-
-    colorized_echo blue "Fetching xray config file"
-    curl -sL "https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend/xray_config.json" -o "code/app/xray/xray_config.json"
-    colorized_echo green "File saved in code/app/xray/xray_config.json"
     
     colorized_echo green "vanish's files downloaded successfully"
 }

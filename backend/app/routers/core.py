@@ -101,32 +101,38 @@ def restart_core(admin: Admin = Depends(Admin.check_sudo_admin)):
 @router.get("/core/config", responses={403: responses._403})
 def get_core_config(admin: Admin = Depends(Admin.check_sudo_admin)) -> dict:
     """Get the current core configuration."""
-    with open(XRAY_JSON, "r") as f:
-        config = commentjson.loads(f.read())
+    # Вместо открытия файла, просто используйте словарь
+    config = XRAY_JSON
 
     return config
 
 
 @router.put("/core/config", responses={403: responses._403})
-def modify_core_config(
-    payload: dict, admin: Admin = Depends(Admin.check_sudo_admin)
-) -> dict:
+def modify_core_config(payload: dict, admin: Admin = Depends(Admin.check_sudo_admin)) -> dict:
     """Modify the core configuration and restart the core."""
     try:
+        # Обновляем конфигурацию XRay
         config = XRayConfig(payload, api_port=xray.config.api_port)
     except ValueError as err:
         raise HTTPException(status_code=400, detail=str(err))
 
+    # Обновляем глобальную конфигурацию
     xray.config = config
-    with open(XRAY_JSON, "w") as f:
-        f.write(json.dumps(payload, indent=4))
 
+    # Вместо записи в файл, обновляем словарь XRAY_JSON
+    XRAY_JSON.update(payload)
+
+    # Перезапускаем конфигурацию
     startup_config = xray.config.include_db_users()
     xray.core.restart(startup_config)
+
+    # Перезапускаем все подключенные узлы
     for node_id, node in list(xray.nodes.items()):
         if node.connected:
             xray.operations.restart_node(node_id, startup_config)
 
+    # Обновляем хосты
     xray.hosts.update()
 
     return payload
+
