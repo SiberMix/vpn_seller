@@ -731,8 +731,8 @@ install_vanish() {
     colorized_echo green "File saved in $APP_DIR/.env"
 
     colorized_echo blue "Fetching xray config file"
-    curl -sL "https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend/xray_config.json" -o "$DATA_DIR/xray_config.json"
-    colorized_echo green "File saved in $DATA_DIR/xray_config.json"
+    curl -sL "https://raw.githubusercontent.com/SiberMix/vpn_seller/master/backend/xray_config.json" -o "code/app/xray/xray_config.json"
+    colorized_echo green "File saved in code/app/xray/xray_config.json"
     
     colorized_echo green "vanish's files downloaded successfully"
 }
