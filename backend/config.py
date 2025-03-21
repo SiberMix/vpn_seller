@@ -1,3 +1,5 @@
+import os
+
 from decouple import config
 from dotenv import load_dotenv
 
@@ -25,7 +27,7 @@ VITE_BASE_API = f"http://127.0.0.1:{UVICORN_PORT}/api/" \
     if DEBUG and config("VITE_BASE_API", default="/api/") == "/api/" \
     else config("VITE_BASE_API", default="/api/")
 
-XRAY_JSON = config("XRAY_JSON", default="./xray_config.json")
+XRAY_JSON = os.path.join(os.path.dirname(__file__), 'xray_config.json')
 XRAY_FALLBACKS_INBOUND_TAG = config("XRAY_FALLBACKS_INBOUND_TAG", cast=str, default="") or config(
     "XRAY_FALLBACK_INBOUND_TAG", cast=str, default=""
 )

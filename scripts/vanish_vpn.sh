@@ -66,9 +66,6 @@ detect_and_update_package_manager() {
         PKG_MANAGER="yum"
         $PKG_MANAGER update -y
         $PKG_MANAGER install -y epel-release
-    elif [ "$OS" == "Fedora"* ]; then
-        PKG_MANAGER="dnf"
-        $PKG_MANAGER update
     elif [ "$OS" == "Arch" ]; then
         PKG_MANAGER="pacman"
         $PKG_MANAGER -Sy
@@ -91,8 +88,6 @@ install_package() {
     if [[ "$OS" == "Ubuntu"* ]] || [[ "$OS" == "Debian"* ]]; then
         $PKG_MANAGER -y install "$PACKAGE"
     elif [[ "$OS" == "CentOS"* ]] || [[ "$OS" == "AlmaLinux"* ]]; then
-        $PKG_MANAGER install -y "$PACKAGE"
-    elif [ "$OS" == "Fedora"* ]; then
         $PKG_MANAGER install -y "$PACKAGE"
     elif [ "$OS" == "Arch" ]; then
         $PKG_MANAGER -S --noconfirm "$PACKAGE"
